@@ -5,7 +5,7 @@ date = "2021-08-04"
 +++
 
 
-It's been a couple months since our [last update](https://snakecharmers.ethereum.org/fe-development-update-6/). In this time, we've merged a total of [40 pull requests from 8 different contributors](https://github.com/ethereum/fe/pulls?q=is%3Apr+is%3Amerged+closed%3A2021-08-03%3E2021-05-29+). Here are some highlights.
+It's been a couple months since our [last update](/posts/fe-development-update-6/). In this time, we've merged a total of [40 pull requests from 8 different contributors](https://github.com/ethereum/fe/pulls?q=is%3Apr+is%3Amerged+closed%3A2021-08-03%3E2021-05-29+). Here are some highlights.
 
 ## We shipped three more releases
 

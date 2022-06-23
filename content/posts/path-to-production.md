@@ -6,7 +6,7 @@ date = "2021-11-01"
 
 
 
-It's been almost a year since we [announced Fe as a new EVM language](https://snakecharmers.ethereum.org/fe-a-new-language-for-the-ethereum-ecosystem/) and stated its goals. Today we would like to reflect on where Fe currently stands, its path to production, and a possible timeline for it.
+It's been almost a year since we [announced Fe as a new EVM language](/posts/fe-a-new-language-for-the-ethereum-ecosystem/) and stated its goals. Today we would like to reflect on where Fe currently stands, its path to production, and a possible timeline for it.
 
 ---
 

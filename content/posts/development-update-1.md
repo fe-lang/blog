@@ -3,7 +3,7 @@ title = "Fe Development Update #1"
 date = "2020-11-20"
 +++
 
-It's been roughly a month since we officially [announced Fe](https://snakecharmers.ethereum.org/fe-a-new-language-for-the-ethereum-ecosystem/) as a new EVM compatible language. Since then, we've made vast progress and want to give the community a chance to catch up with the recent development.
+It's been roughly a month since we officially [announced Fe](/posts/fe-a-new-language-for-the-ethereum-ecosystem/) as a new EVM compatible language. Since then, we've made vast progress and want to give the community a chance to catch up with the recent development.
 
 There have been a total of 23 merged Pull Requests by 4 different people and we would like to take the chance to highlight some of the development.
 

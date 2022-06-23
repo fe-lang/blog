@@ -4,7 +4,7 @@ date = "2021-04-29"
 +++
 
 
-We've been hard at work since our [last update](https://snakecharmers.ethereum.org/fe-development-update-4/) and can't wait to talk about all the latest progress we've made. Let's dive right in.
+We've been hard at work since our [last update](/posts/fe-development-update-4/) and can't wait to talk about all the latest progress we've made. Let's dive right in.
 
 
 ## Team growth
@@ -15,7 +15,7 @@ Part of their efforts have already formed the latest release that just shipped.
 
 ## We shipped v0.4.0-alpha "Diamond"
 
-We've actually shipped two releases since the last update but many of the changes from the [0.3.0-alpha](https://github.com/ethereum/fe/releases/tag/v0.3.0-alpha) release were already covered in our [last development update](https://snakecharmers.ethereum.org/fe-development-update-4/). As usual, the entire list of changes can be found in the changelog on the [release page](https://github.com/ethereum/fe/releases/tag/v0.4.0-alpha). In this article, we'll focus on the two most exciting recent developments. 
+We've actually shipped two releases since the last update but many of the changes from the [0.3.0-alpha](https://github.com/ethereum/fe/releases/tag/v0.3.0-alpha) release were already covered in our [last development update](/posts/fe-development-update-4/). As usual, the entire list of changes can be found in the changelog on the [release page](https://github.com/ethereum/fe/releases/tag/v0.4.0-alpha). In this article, we'll focus on the two most exciting recent developments. 
 
 
 ## A brand new parser

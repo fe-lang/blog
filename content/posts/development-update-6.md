@@ -4,7 +4,7 @@ date = "2021-05-31"
 +++
 
 
-It's been a month since our [last update](https://snakecharmers.ethereum.org/fe-development-update-5/). In this time, we've merged a total of 22 pull requests from 4 different contributors. Here are some highlights.
+It's been a month since our [last update](/posts/fe-development-update-5/). In this time, we've merged a total of 22 pull requests from 4 different contributors. Here are some highlights.
 
 ## We shipped v0.5.0-alpha "Evenkite"
 

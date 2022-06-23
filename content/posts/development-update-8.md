@@ -5,7 +5,7 @@ date = "2021-10-05"
 +++
 
 
-It's been a couple months since our [last update](https://snakecharmers.ethereum.org/fe-development-update-7/). In this time, we've merged a total of [20 pull requests from 7 different contributors](https://github.com/ethereum/fe/pulls?q=is%3Apr+is%3Amerged+closed%3A2021-10-04%3E2021-08-03). Here are some highlights.
+It's been a couple months since our [last update](/posts/fe-development-update-7/). In this time, we've merged a total of [20 pull requests from 7 different contributors](https://github.com/ethereum/fe/pulls?q=is%3Apr+is%3Amerged+closed%3A2021-10-04%3E2021-08-03). Here are some highlights.
 
 ## We shipped 2 more releases
 
@@ -56,7 +56,7 @@ Added in [#468](https://github.com/ethereum/fe/pull/468).
 
 ## What's next
 
-We are still focused on [cutting a beta release](https://snakecharmers.ethereum.org/fes-path-to-production/) before the end of the year and will keep the community updated. For more information about our immediate goals and to see whats under development, please see the issues and PRs in our [repository](https://github.com/ethereum/fe).
+We are still focused on [cutting a beta release](/posts/fes-path-to-production/) before the end of the year and will keep the community updated. For more information about our immediate goals and to see whats under development, please see the issues and PRs in our [repository](https://github.com/ethereum/fe).
 
 ---
 
