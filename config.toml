@@ -1,0 +1,30 @@
+# The URL the site will be built for
+base_url = "https://blog.fe-lang.org"
+
+# Whether to automatically compile all Sass files in the sass directory
+compile_sass = true
+
+# Whether to build a search index to be used later on by a JavaScript library
+build_search_index = true
+
+# Theme: https://www.getzola.org/themes/apollo/
+theme = "apollo"
+
+[markdown]
+# Whether to do syntax highlighting
+# Theme can be customised by setting the `highlight_theme` variable to a theme supported by Zola
+highlight_code = true
+
+[extra]
+# Put all your custom variables here
+
+menu = [
+    { name = "/posts", url = "/posts", weight = 1 },
+    { name = "/projects", url = "/projects", weight = 2 },
+    { name = "/about", url = "/about", weight = 3 },
+]
+
+socials = [
+    { name = "twitter", url = "https://twitter.com/official_fe", icon = "twitter" },
+    { name = "github", url = "https=//github.com/ethereum/fe", icon = "github" },
+]

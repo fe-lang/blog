@@ -1,0 +1,49 @@
+@import "../themes/apollo/sass/parts/code.scss";
+@import "parts/_header.scss";
+@import "parts/_image.scss";
+@import "../themes/apollo/sass/parts/misc.scss";
+@import "../themes/apollo/sass/parts/table.scss";
+@import "../themes/apollo/sass/parts/tags.scss";
+
+:root {
+  /* Used for: block comment, hr, ... */
+  --border-color: var(--bg-1);
+
+  /* Fonts */
+  //--all: 'Jetbrains Mono'; //"system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif,'Apple Color Emoji','Segoe UI Emoji'";
+  --text-font: system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif,'Apple Color Emoji','Segoe UI Emoji';
+  --header-font: system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif,'Apple Color Emoji','Segoe UI Emoji';
+  --code-font: 'Jetbrains Mono';
+}
+
+html {
+  background-color: var(--bg-0);
+  color: var(--text-0);
+  font-family: var(--text-font);
+  line-height: 1.6em;
+}
+
+.content {
+  max-width: 944px;
+  margin: 0 auto;
+  padding: 0 24px;
+  word-wrap: break-word;
+}
+
+@media all and (min-width:640px) {
+  html {
+    font-size: 16.5px;
+  }
+}
+
+@media all and (min-width:720px) {
+  html {
+    font-size: 17px;
+  }
+}
+
+@media all and (min-width:960px) {
+  html {
+    font-size: 18px;
+  }
+}

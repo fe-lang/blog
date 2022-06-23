@@ -1,0 +1,19 @@
+<header>
+    <div class="main">
+        <a href={{ config.base_url }}>{{ config.title }}</a>
+    </div>
+
+    <div class="sm:flex sm:justify-between sm:items-center sm:py-4 relative z-10 max-w-screen-lg xl:max-w-screen-xl mx-auto">
+        <div class="flex items-center justify-between px-4 py-2 sm:p-0">
+          <div>
+            <img class="h-12" src="{{ config.base_url }}/fe-logo-small.svg" alt="Fe Programming Language">
+          </div>
+        </div>
+        <nav id="menu" class="px-2 pt-2 pb-4 text-center sm:flex sm:p-0 sm:text-left">
+          <a href="https://fe-lang.org/docs/quickstart/index.html" class="transition duration-100 ease-in-out block text-lg px-2 py-2 hover:bg-gray-700 hover:text-white rounded-sm sm:mt-0 sm:ml-2 sm:px-4" style="border-bottom: none;" title="Get started">Get started</a>
+          <a href="https://fe-lang.org/docs/index.html" class="transition duration-100 ease-in-out mt-1 text-lg block px-2 py-2 hover:bg-gray-700 hover:text-white rounded-sm sm:mt-0 sm:ml-2 sm:px-4" style="border-bottom: none;" title="Learn">Learn</a>
+          <a href="https://discord.gg/ywpkAXFjZH" class="transition duration-100 ease-in-out mt-1 text-lg block px-2 py-2 hover:bg-gray-700 hover:text-white rounded-sm sm:mt-0 sm:ml-2 sm:px-4" style="border-bottom: none;" title="Community">Community</a>
+          <a href="{{ config.base_url }}" class="transition duration-100 ease-in-out mt-1 text-lg block px-2 py-2 hover:bg-gray-700 hover:text-white rounded-sm sm:mt-0 sm:ml-2 sm:px-4" title="Blog">Blog</a>
+        </nav>
+      </div>
+</header>
