@@ -5,7 +5,7 @@ date = "2021-10-05"
 +++
 
 
-It's been a couple months since our [last update](/posts/fe-development-update-7/). In this time, we've merged a total of [20 pull requests from 7 different contributors](https://github.com/ethereum/fe/pulls?q=is%3Apr+is%3Amerged+closed%3A2021-10-04%3E2021-08-03). Here are some highlights.
+It's been a couple months since our [last update](/posts/development-update-7/). In this time, we've merged a total of [20 pull requests from 7 different contributors](https://github.com/ethereum/fe/pulls?q=is%3Apr+is%3Amerged+closed%3A2021-10-04%3E2021-08-03). Here are some highlights.
 
 ## We shipped 2 more releases
 

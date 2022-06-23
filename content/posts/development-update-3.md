@@ -4,7 +4,7 @@ date = "2021-02-10"
 +++
 
 
-Howdy, this is our first development update in 2021. We would once again like to keep you up to date about all the progress that happened since [the previous update](/posts/fe-development-update-2/).
+Howdy, this is our first development update in 2021. We would once again like to keep you up to date about all the progress that happened since [the previous update](/posts/development-update-2/).
 
 
 ## We shipped v0.1.0-alpha "Amethyst"

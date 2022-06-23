@@ -3,7 +3,7 @@ title = "Fe Development Update #4"
 date = "2021-03-22"
 +++
 
-Hello, it's time for another Fe development update. There's alot to share since the [last one](/posts/fe-development-update-3/).
+Hello, it's time for another Fe development update. There's alot to share since the [last one](/posts/development-update-3/).
 
 ## We shipped v0.2.0-alpha "Borax"
 
@@ -31,7 +31,7 @@ Related PRs: [#265](https://github.com/ethereum/fe/pull/265), [#267](https://git
 
 ## More work on structs
 
-[Last month](/posts/fe-development-update-3/) we shipped basic support for structs. Since then, we've landed some new improvements to our struct support.
+[Last month](/posts/development-update-3/) we shipped basic support for structs. Since then, we've landed some new improvements to our struct support.
 
 - Accept structs as parameters to public functions or return them from public functions ([#296](https://github.com/ethereum/fe/pull/296))
 - Update individual struct fields in storage ([#246](https://github.com/ethereum/fe/pull/246))

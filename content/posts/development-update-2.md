@@ -3,7 +3,7 @@ title = "Fe Development Update #2"
 date = "2020-12-21"
 +++
 
-It's been a month since our [last development update](/posts/fe-development-update-1/) and we'd like to take some time once again to fill you in on our progress.
+It's been a month since our [last development update](/posts/development-update-1/) and we'd like to take some time once again to fill you in on our progress.
 
 In this time, we've merged a total of 20 Pull Requests from 3 different people, finished implementing all the features required for an ERC-20 contract, expanded type support, and have begun planning our first release.
 
