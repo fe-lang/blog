@@ -3,6 +3,11 @@
 // the relevant elements to apply whatever was computed.
 
 header {
+
+  .no-border {
+    border: none;
+  }
+
   .div-one {
     tab-size: 4;
     -webkit-text-size-adjust: 100%;
