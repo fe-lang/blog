@@ -18,10 +18,9 @@ highlight_code = true
 [extra]
 # Put all your custom variables here
 
+stylesheets = ["custom.css"]
+
 menu = [
-    { name = "/posts", url = "/posts", weight = 1 },
-    { name = "/projects", url = "/projects", weight = 2 },
-    { name = "/about", url = "/about", weight = 3 },
 ]
 
 socials = [
