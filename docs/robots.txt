@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://fe-lang.github.io/blog/sitemap.xml

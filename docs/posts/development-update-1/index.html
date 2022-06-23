@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    
+    
+    <title>
+        Fe Development Update #1
+    </title>
+    
+
+    
+    
+
+    
+    
+        <link href=https://fe-lang.github.io/blog/fonts.css rel="stylesheet" />
+    
+        <!-- <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet"> -->
+
+    
+    
+
+    
+    <link rel="alternate" type="application/atom+xml" title="" href="https://fe-lang.github.io/blog/atom.xml">
+
+    
+    
+    
+        <link rel="stylesheet" type="text/css" href="https://fe-lang.github.io/blog/theme/light.css"/>
+    
+
+    <link rel="stylesheet" type="text/css" media="screen" href=https://fe-lang.github.io/blog/main.css />
+
+
+    
+        
+            <link rel="stylesheet" href="https://fe-lang.github.io/blog/custom.css">
+        
+    
+</head>
+
+<body>
+    <div class="content">
+        <header>
+    <div class="main">
+        <a href=https:&#x2F;&#x2F;fe-lang.github.io&#x2F;blog&#x2F;></a>
+    </div>
+
+    <div class="div-one">
+        <div class="div-one-child">
+            <img src="https:&#x2F;&#x2F;fe-lang.github.io&#x2F;blog&#x2F;/fe-logo-small.svg" alt="Fe Programming Language">
+        </div>
+        <nav id="menu">
+          <a href="https://fe-lang.org/docs/quickstart/index.html" class="a-non-active" title="Get started">Get started</a>
+          <a href="https://fe-lang.org/docs/index.html" class="a-non-active" title="Learn">Learn</a>
+          <a href="https://discord.gg/ywpkAXFjZH" class="a-non-active" title="Community">Community</a>
+          <a href="https:&#x2F;&#x2F;fe-lang.github.io&#x2F;blog&#x2F;" class="a-active" title="Blog">Blog</a>
+        </nav>
+      </div>
+</header>
+
+        
+        
+    
+<main>
+    <article>
+        <div class="title">
+            
+            
+    <div class="page-header">
+        Fe Development Update #1<span class="primary-color" style="font-size: 1.6em">.</span>
+    </div>
+
+
+            
+                <div class="meta">
+                    Posted on 2020-11-20
+
+                    
+                </div>
+            
+        </div>
+
+        
+
+        
+        
+
+        <section class="body">
+            <p>It's been roughly a month since we officially <a href="https://snakecharmers.ethereum.org/fe-a-new-language-for-the-ethereum-ecosystem/">announced Fe</a> as a new EVM compatible language. Since then, we've made vast progress and want to give the community a chance to catch up with the recent development.</p>
+<p>There have been a total of 23 merged Pull Requests by 4 different people and we would like to take the chance to highlight some of the development.</p>
+<h2 id="say-hello-to-our-official-logo">Say hello to our official logo</h2>
+<img alt="Fe logo" src="https://raw.githubusercontent.com/ethereum/fe/master/logo/fe_svg/fe_source.svg" style="width: 200px; display: block; margin: auto;">
+<p>As all Fe development happens entirely in the open, we were fortunate to have designer <a href="https://github.com/ethereum/fe/issues/38">Daniel Iñiguez show up to offer his help</a> and create this logo for Fe. It is &quot;Fe&quot; written in iron blocks.</p>
+<h2 id="constructors">Constructors</h2>
+<p>Fe can now handle constructors with a syntax similar to that of Python. Here is an example:</p>
+<pre data-lang="Python" style="background-color:#2b303b;color:#c0c5ce;" class="language-Python "><code class="language-Python" data-lang="Python"><span>contract Foo:
+</span><span>    bar: </span><span style="color:#96b5b4;">map</span><span>&lt;u256, u256&gt;
+</span><span>
+</span><span>    pub </span><span style="background-color:#bf616a;color:#2b303b;">def</span><span> </span><span style="color:#96b5b4;">__init__</span><span>(baz: u256, bing: u256):
+</span><span>        </span><span style="color:#bf616a;">self</span><span>.bar[</span><span style="color:#d08770;">42</span><span>] = baz + bing
+</span></code></pre>
+<h2 id="implicit-return-of">Implicit return of <code>()</code></h2>
+<p>Fe now treats functions that do not explicitly return anything the same way that Rust does by implicitly returning <code>()</code> (an empty <code>Tuple</code>). To let code speak; all of these mean the same thing:</p>
+<p><strong>Full length form</strong></p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>def foo() -&gt; ():
+</span><span>    y: u256 = 1
+</span><span>    return ()
+</span></code></pre>
+<p><strong>No explicit return in signature</strong></p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>def foo():
+</span><span>    y: u256 = 1
+</span><span>    return ()
+</span></code></pre>
+<p><strong>No explicit return statement</strong></p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>def foo() -&gt; ():
+</span><span>    y: u256 = 1
+</span></code></pre>
+<p><strong>No return in signature and function body</strong></p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>def foo():
+</span><span>    y: u256 = 1
+</span></code></pre>
+<p><em>Note that empty tuple literals are not supported yet, so some of the examples will not compile.</em></p>
+<p>Semantically, this is how Rust treats empty function returns. The reason why we followed suit is because it makes code more straight forward and saves us from having to implement a special type for empty function returns. Functions simply always return <em>something</em> even if this <em>something</em> means it's the <code>()</code> type.</p>
+<h2 id="string-and-dynamically-sized-abi-type-support">String and dynamically-sized ABI type support</h2>
+<p>Support for encoding of dynamically-sized arrays was prioritized this month so that we could implement strings, which are used in the ERC-20 contract. Although strings are encoded dynamically, their sizes are capped by the developer. In practice, these sizes look similar to the sizes of numeric types (e.g. <code>u8</code>, <code>u16</code>, .., <code>u256</code>). With strings, though, the size is representative of bytes and is not limited to a set of predefined sizes, meaning the developer can specify any size (e.g. <code>string32</code> or <code>string5555</code>).</p>
+<p>Here's a piece of working Fe code that shows strings in action:</p>
+<pre data-lang="python" style="background-color:#2b303b;color:#c0c5ce;" class="language-python "><code class="language-python" data-lang="python"><span>contract Foo:
+</span><span>    event MyEvent:
+</span><span>        text: string100
+</span><span>        amount: u256
+</span><span>
+</span><span>    pub </span><span style="background-color:#bf616a;color:#2b303b;">def</span><span> </span><span style="color:#bf616a;">bar</span><span>(text: string100, amount: u256):
+</span><span>        emit </span><span style="color:#bf616a;">MyEvent</span><span>(text, amount)
+</span></code></pre>
+<h2 id="miscellaneous-features">Miscellaneous features</h2>
+<p>There's a whole bunch of features that weren't yet supported four weeks ago. Without going into too much detail, let's just list them here:</p>
+<ul>
+<li>Function calls (with or without arguments)</li>
+<li>If / Else statements</li>
+<li>While Loops (including <code>break</code> and <code>continue</code> statements)</li>
+<li>Boolean support</li>
+<li>Assert statements</li>
+<li>Events with multiple parameters</li>
+<li>Many improvements to our ABI encoder</li>
+</ul>
+<h3 id="final-words">Final words</h3>
+<p>There's been a lot more development that didn't get mentioned here, but we'd like to keep these updates short and crisp. Maybe just a short teaser, <a href="https://fe.ethereum.org">fe.ethereum.org</a> has been set up and currently refers to the generated API docs, but will be replaced by a proper website soon.</p>
+
+        </section>
+
+        
+
+    </article>
+</main>
+
+
+    </div>
+</body>
+
+</html>

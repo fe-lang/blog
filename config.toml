@@ -1,5 +1,5 @@
 # The URL the site will be built for
-base_url = "https://blog.fe-lang.org"
+base_url = "https://fe-lang.github.io/blog/"
 
 # Whether to automatically compile all Sass files in the sass directory
 compile_sass = true
@@ -9,6 +9,9 @@ build_search_index = true
 
 # Theme: https://www.getzola.org/themes/apollo/
 theme = "apollo"
+
+# Github expects the name to be "docs"
+output_dir = "docs"
 
 [markdown]
 # Whether to do syntax highlighting
