@@ -10,8 +10,7 @@ build_search_index = true
 # Theme: https://www.getzola.org/themes/apollo/
 theme = "apollo"
 
-# Github expects the name to be "docs"
-output_dir = "docs"
+output_dir = "target"
 
 [markdown]
 # Whether to do syntax highlighting
