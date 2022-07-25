@@ -1,8 +1,9 @@
 .PHONY: build
 build:
 	zola build
-.PHONY: serve-website
-
+.PHONY: serve
+serve:
+	zola serve
 .PHONY: deploy
 deploy: build
 		echo -e "\033[0;32mDeploying blog...\033[0m"
