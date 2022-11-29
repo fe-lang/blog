@@ -12,7 +12,11 @@ Create a new file in `/content/posts` and send a pull requests.
 
 ## How to serve locally
 
-Run `zola serve`
+Clone repo `git clone https://github.com/fe-lang/blog.git`
+
+Populate the apollo theme folder, `git submodule init` && `git submodule update`
+
+Run zola `zola serve`
 
 ## How to deploy
 
