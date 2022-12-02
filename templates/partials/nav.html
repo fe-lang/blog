@@ -1,17 +1,28 @@
 <header>
-    <div class="main">
-        <a href={{ config.base_url }}>{{ config.title }}</a>
+  <section class="nav">
+    <div>
+      <a href="https://fe-lang.org" class="no-border">
+        <img src="{{ config.base_url }}/fe-logo-small.svg" alt="Fe Programming Language">
+      </a>
     </div>
-
-    <div class="div-one">
-        <div class="div-one-child">
-          <a href="https://fe-lang.org" class="no-border"><img src="{{ config.base_url }}/fe-logo-small.svg" alt="Fe Programming Language"></a>
-        </div>
-        <nav id="menu">
-          <a href="https://fe-lang.org/docs/quickstart/index.html" class="a-non-active" title="Get started">Get started</a>
-          <a href="https://fe-lang.org/docs/index.html" class="a-non-active" title="Learn">Learn</a>
-          <a href="https://discord.gg/ywpkAXFjZH" class="a-non-active" title="Community">Community</a>
-          <a href="{{ config.base_url }}" class="a-active" title="Blog">Blog</a>
-        </nav>
-      </div>
+    <input id="menu-toggle" type="checkbox" />
+    <label class='menu-button-container' for="menu-toggle">
+      <div class='menu-button'></div>
+    </label>
+    <ul class="menu">
+      <li>
+        <a href="https://fe-lang.org/docs/quickstart/index.html" class="a-non-active" title="Get started">Get
+          started</a>
+      </li>
+      <li>
+        <a href="https://fe-lang.org/docs/index.html" class="a-non-active" title="Learn">Learn</a>
+      </li>
+      <li>
+        <a href="https://discord.gg/ywpkAXFjZH" class="a-non-active" title="Community">Community</a>
+      </li>
+      <li>
+        <a href="{{ config.base_url }}" class="a-active" title="Blog">Blog</a>
+      </li>
+    </ul>
+  </section>
 </header>
