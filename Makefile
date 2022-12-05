@@ -23,7 +23,7 @@ deploy: build
 		git subtree split -P target -b gh-pages-dist
 
 		# Push to Github Pages
-		git push -f origin gh-pages-dist:gh-pages
+		git push -f upstream gh-pages-dist:gh-pages
 
 		# Go where we came from
 		git checkout -
