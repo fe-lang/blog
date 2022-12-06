@@ -45,7 +45,10 @@ pub fn lock(mut self, ctx: Context) {
     } else if ctx.msg_value() < LOCK_DEPOSIT_IN_WEI {
         revert InvalidDeposit()
     } else {
-        self.lock = ClaimLock(claimer:ctx.msg_sender(), valid_until_block: ctx.block_number() + LOCK_PERIOD_IN_BLOCKS)
+        self.lock = ClaimLock(
+            claimer:ctx.msg_sender(),
+            valid_until_block: ctx.block_number() + LOCK_PERIOD_IN_BLOCKS
+        )
     }
 }
 ```
