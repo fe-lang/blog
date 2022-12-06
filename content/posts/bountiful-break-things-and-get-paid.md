@@ -92,7 +92,7 @@ So you want to crack the jackpot? Here's how it really works. We don't expect it
 
 But still, here's a basic start
 
-1. First, clone the [code from GitHub](github.com/fe-lang/bountiful)
+1. First, clone the [code from GitHub](https://github.com/fe-lang/bountiful)
 
 2. Next, run `npx hardhat test`
 
@@ -108,7 +108,7 @@ In practice, finding a bug hopefully won't be as easy as calling one of the regu
 
 These are the addresses of the contracts that were deployed on the Ethereum mainnet. We also provide links to the tagged bountiful code that was used for the deployment. Please note that Etherscan doesn't yet support Fe source code verification which means that there is no code visible for these contracts at Etherscan. If you like to see Fe support on Etherscan, please [reach out to them and let them know](https://etherscan.io/contactus).
 
-Registry contract: [`0xcF19640dfB72762d6B75d6AfeEcFb5d54092f768`](https://etherscan.io/address/0xcF19640dfB72762d6B75d6AfeEcFb5d54092f768) ([source code](https://example.com))
+Registry contract: [`0xcF19640dfB72762d6B75d6AfeEcFb5d54092f768`](https://etherscan.io/address/0xcF19640dfB72762d6B75d6AfeEcFb5d54092f768) ([source code](https://github.com/fe-lang/bountiful/blob/0.1.0/contracts/src/registry/registry.fe))
 
 Game contracts:
 
