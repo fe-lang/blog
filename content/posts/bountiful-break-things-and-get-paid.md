@@ -115,7 +115,7 @@ Registry contract: [`0xcF19640dfB72762d6B75d6AfeEcFb5d54092f768`](https://ethers
 Game contracts:
 
 - 15 Puzzle implementation 1: [`0x08554F7A7674841053d55f9ACe77D698FD25b99e`](https://etherscan.io/address/0x08554F7A7674841053d55f9ACe77D698FD25b99e) ([source code](https://github.com/fe-lang/bountiful/blob/0.1.0/contracts/src/challenges/game.fe))
-- 15 Puzzle implementation 2: [`0x8e3C037b9f76DE7E1b094C6b7BEEa6e80dCB3f64`](https://etherscan.io/address/0x8e3C037b9f76DE7E1b094C6b7BEEa6e80dCB3f64) ([source code](https://github.com/fe-lang/bountiful/blob/0.1.0/contracts/src/challenges/game_i8.fe))
+- ~~15 Puzzle implementation 2: [`0x8e3C037b9f76DE7E1b094C6b7BEEa6e80dCB3f64`](https://etherscan.io/address/0x8e3C037b9f76DE7E1b094C6b7BEEa6e80dCB3f64) ([source code](https://github.com/fe-lang/bountiful/blob/0.1.0/contracts/src/challenges/game_i8.fe))~~ ([removed](https://twitter.com/official_fe/status/1600810003253719040))
 - 15 Puzzle implementation 3: [`0xa48607017E7E79011bb0C6B2cB2a462808015449`](https://etherscan.io/address/0xa48607017E7E79011bb0C6B2cB2a462808015449) ([source code](https://github.com/fe-lang/bountiful/blob/0.1.0/contracts/src/challenges/game3.fe))
 - 15 Puzzle implementation 4: [`0x27BD48e8098aAf734005483E2cD4a029F70ADc0D`](https://etherscan.io/address/0x27BD48e8098aAf734005483E2cD4a029F70ADc0D) ([source code](https://github.com/fe-lang/bountiful/blob/0.1.0/contracts/src/challenges/game3.fe))
 
