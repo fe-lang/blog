@@ -3,6 +3,8 @@ title = "bountiful: break things and get paid"
 date = "2022-12-06"
 +++
 
+**UPDATE: Someone was lucky enough to already take the bounty. Here's [a short twitter thread explaining what happened](https://twitter.com/official_fe/status/1600810003253719040).
+We will restart the contest soon!**
 
 Today we are unveiling the *bountiful* project. It is - to our knowledge - the first Fe code deployed to the Ethereum mainnet. This marks an important milestone for Fe on its road to become a production-ready EVM language.
 
