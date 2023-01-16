@@ -3,8 +3,9 @@ title = "bountiful: break things and get paid"
 date = "2022-12-06"
 +++
 
-**UPDATE: Someone was lucky enough to already take the bounty. Here's [a short twitter thread explaining what happened](https://twitter.com/official_fe/status/1600810003253719040).
-We will restart the contest soon!**
+**UPDATE: This article is kept up to date as we go through multiple rounds of the bug bounty contest. We create short announcement posts as needed but this post remains in charge to explain the general details of the contest**
+
+**ROUND #2 IS LIVE: [Read the announcement](/posts/bountiful-round-2)**.
 
 Today we are unveiling the *bountiful* project. It is - to our knowledge - the first Fe code deployed to the Ethereum mainnet. This marks an important milestone for Fe on its road to become a production-ready EVM language.
 
@@ -110,14 +111,18 @@ In practice, finding a bug hopefully won't be as easy as calling one of the regu
 
 These are the addresses of the contracts that were deployed on the Ethereum mainnet. We also provide links to the tagged bountiful code that was used for the deployment. Please note that Etherscan doesn't yet support Fe source code verification which means that there is no code visible for these contracts at Etherscan. If you like to see Fe support on Etherscan, please [reach out to them and let them know](https://etherscan.io/contactus).
 
-Registry contract: [`0xcF19640dfB72762d6B75d6AfeEcFb5d54092f768`](https://etherscan.io/address/0xcF19640dfB72762d6B75d6AfeEcFb5d54092f768) ([source code](https://github.com/fe-lang/bountiful/blob/0.1.0/contracts/src/registry/registry.fe))
+**The following addresses are out of date because the initial round ended with one of the contracts getting exploited. Read our [a short twitter thread explaining what happened](https://twitter.com/official_fe/status/1600810003253719040).**
+
+**For the up to date addresses please refer to the [latest announcement of round #2](/posts/bountiful-round-2).**
+
+Registry contract: ~~[`0xcF19640dfB72762d6B75d6AfeEcFb5d54092f768`](https://etherscan.io/address/0xcF19640dfB72762d6B75d6AfeEcFb5d54092f768) ([source code](https://github.com/fe-lang/bountiful/blob/0.1.0/contracts/src/registry/registry.fe))~~
 
 Game contracts:
 
-- 15 Puzzle implementation 1: [`0x08554F7A7674841053d55f9ACe77D698FD25b99e`](https://etherscan.io/address/0x08554F7A7674841053d55f9ACe77D698FD25b99e) ([source code](https://github.com/fe-lang/bountiful/blob/0.1.0/contracts/src/challenges/game.fe))
-- ~~15 Puzzle implementation 2: [`0x8e3C037b9f76DE7E1b094C6b7BEEa6e80dCB3f64`](https://etherscan.io/address/0x8e3C037b9f76DE7E1b094C6b7BEEa6e80dCB3f64) ([source code](https://github.com/fe-lang/bountiful/blob/0.1.0/contracts/src/challenges/game_i8.fe))~~ ([removed](https://twitter.com/official_fe/status/1600810003253719040))
-- 15 Puzzle implementation 3: [`0xa48607017E7E79011bb0C6B2cB2a462808015449`](https://etherscan.io/address/0xa48607017E7E79011bb0C6B2cB2a462808015449) ([source code](https://github.com/fe-lang/bountiful/blob/0.1.0/contracts/src/challenges/game3.fe))
-- 15 Puzzle implementation 4: [`0x27BD48e8098aAf734005483E2cD4a029F70ADc0D`](https://etherscan.io/address/0x27BD48e8098aAf734005483E2cD4a029F70ADc0D) ([source code](https://github.com/fe-lang/bountiful/blob/0.1.0/contracts/src/challenges/game3.fe))
+- 15 Puzzle implementation 1: ~~[`0x08554F7A7674841053d55f9ACe77D698FD25b99e`](https://etherscan.io/address/0x08554F7A7674841053d55f9ACe77D698FD25b99e) ([source code](https://github.com/fe-lang/bountiful/blob/0.1.0/contracts/src/challenges/game.fe))~~
+- ~~15 Puzzle implementation 2: [`0x8e3C037b9f76DE7E1b094C6b7BEEa6e80dCB3f64`](https://etherscan.io/address/0x8e3C037b9f76DE7E1b094C6b7BEEa6e80dCB3f64) ([source code](https://github.com/fe-lang/bountiful/blob/0.1.0/contracts/src/challenges/game_i8.fe))~~
+- 15 Puzzle implementation 3: ~~[`0xa48607017E7E79011bb0C6B2cB2a462808015449`](https://etherscan.io/address/0xa48607017E7E79011bb0C6B2cB2a462808015449) ([source code](https://github.com/fe-lang/bountiful/blob/0.1.0/contracts/src/challenges/game3.fe))~~
+- 15 Puzzle implementation 4: ~~[`0x27BD48e8098aAf734005483E2cD4a029F70ADc0D`](https://etherscan.io/address/0x27BD48e8098aAf734005483E2cD4a029F70ADc0D) ([source code](https://github.com/fe-lang/bountiful/blob/0.1.0/contracts/src/challenges/game3.fe))~~
 
 ### Final words
 
