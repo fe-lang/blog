@@ -34,8 +34,8 @@ Game contracts:
 
 **NEW, Feb 13**
 
-- 15 Puzzle implementation 5: [`0x7Bd3ad385ac3354Cd9AB400F08076f0c10ebAD12`](https://etherscan.io/address/0x7Bd3ad385ac3354Cd9AB400F08076f0c10ebAD12) ([source code](https://github.com/fe-lang/bountiful/blob/0.2.0/contracts/src/challenges/game5_6.fe))
-- 15 Puzzle implementation 6: [`0xA6b95deeba0089bc3d6689805179d439f714f2ed`](https://etherscan.io/address/0xA6b95deeba0089bc3d6689805179d439f714f2ed) ([source code](https://github.com/fe-lang/bountiful/blob/0.2.0/contracts/src/challenges/game5_6.fe))
+- 15 Puzzle implementation 5: [`0x7Bd3ad385ac3354Cd9AB400F08076f0c10ebAD12`](https://etherscan.io/address/0x7Bd3ad385ac3354Cd9AB400F08076f0c10ebAD12) ([source code](https://github.com/fe-lang/bountiful/blob/master/contracts/src/challenges/game5_6.fe))
+- 15 Puzzle implementation 6: [`0xA6b95deeba0089bc3d6689805179d439f714f2ed`](https://etherscan.io/address/0xA6b95deeba0089bc3d6689805179d439f714f2ed) ([source code](https://github.com/fe-lang/bountiful/blob/master/contracts/src/challenges/game5_6.fe))
 
 
 ### How to start
