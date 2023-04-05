@@ -14,7 +14,7 @@ Today we like to reflect on our progress and share our plans for the future of F
 
 If you've been following our [recent updates](/posts/bountiful-round-2), you will know that we quickly fixed the issue and restarted the contest and that the ongoing bug bounty contest did not reveal any critical bugs. In fact, the bounty is still up for grabs, go check it out if you're interested.
 
-This certainly doesn't mean that Fe is bug-free, quite the contrary, we expect the compiler to still have bugs and we want to invite you to find and report them.
+This certainly doesn't mean that Fe is bug-free, quite the contrary, we expect the compiler to still have bugs and we want to invite you to find and report them. It also doesn't mean that it's a polished language yet. We are still missing important features and have to iron out rough edges.
 
 However, it does mean that we are confident enough to drop the `-alpha` marker from releases, starting with the latest [0.22.0](https://github.com/ethereum/fe/releases/tag/v0.22.0) release. As we've [mentioned in the past](/posts/path-to-production), dropping the `-alpha` marker does not imply that the language is stable or feature-complete. It will still take a long way to go before we get anywhere close to that. As we continue to follow semantic versioning our `0.x` releases continue to be *unstable*.
 
