@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    
+    
+    <title>
+        bountiful: round #2
+    </title>
+    
+
+    
+    
+
+    
+    
+        <link href=https://blog.fe-lang.org/fonts.css rel="stylesheet" />
+    
+        <!-- <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet"> -->
+
+    
+    
+
+    
+    <link rel="alternate" type="application/atom+xml" title="" href="https://blog.fe-lang.org/atom.xml">
+
+    
+    
+    
+        <link rel="stylesheet" type="text/css" href="https://blog.fe-lang.org/theme/light.css"/>
+    
+
+    <link rel="stylesheet" type="text/css" media="screen" href=https://blog.fe-lang.org/main.css />
+
+
+    
+        
+            <link rel="stylesheet" href="https://blog.fe-lang.org/custom.css">
+        
+    
+</head>
+
+<body>
+    <div class="content">
+        <header>
+  <section class="nav">
+    <div>
+      <a href="https://fe-lang.org" class="no-border">
+        <img src="https:&#x2F;&#x2F;blog.fe-lang.org/fe-logo-small.svg" alt="Fe Programming Language">
+      </a>
+    </div>
+    <input id="menu-toggle" type="checkbox" />
+    <label class='menu-button-container' for="menu-toggle">
+      <div class='menu-button'></div>
+    </label>
+    <ul class="menu">
+      <li>
+        <a href="https://fe-lang.org/docs/quickstart/index.html" class="a-non-active" title="Get started">Get
+          started</a>
+      </li>
+      <li>
+        <a href="https://fe-lang.org/docs/index.html" class="a-non-active" title="Learn">Learn</a>
+      </li>
+      <li>
+        <a href="https://discord.gg/ywpkAXFjZH" class="a-non-active" title="Community">Community</a>
+      </li>
+      <li>
+        <a href="https:&#x2F;&#x2F;blog.fe-lang.org" class="a-active" title="Blog">Blog</a>
+      </li>
+    </ul>
+  </section>
+</header>
+
+        
+        
+    
+<main>
+    <article>
+        <div class="title">
+            
+            
+    <div class="page-header">
+        bountiful: round #2<span class="primary-color" style="font-size: 1.6em">.</span>
+    </div>
+
+
+            
+                <div class="meta">
+                    Posted on 2023-01-11
+
+                    
+                </div>
+            
+        </div>
+
+        
+
+        
+        
+
+        <section class="body">
+            <p><strong>UPDATE, Feb 13, we've activated two more challenges listed below</strong></p>
+<p>We are happy to inform that we just activated the second round of our bountiful bug bounty contest. Make sure to read the <a href="https://blog.fe-lang.org/posts/bountiful-break-things-and-get-paid/">initial announcement</a> if you aren't yet familar with the project.</p>
+<h3 id="before-you-hack">Before you hack</h3>
+<p>Before you get going, please take a minute to help us gather some feedback about our bug bounty contest through our <a href="https://docs.google.com/forms/d/e/1FAIpQLScWytmjTEJCYCPXzxKnpS44vuPEuLku5KjSXD2LjmW4jiGLRA/viewform">one minute survey</a>.</p>
+<h3 id="changes">Changes</h3>
+<p>After the first round <a href="https://twitter.com/plotchy/status/1600894668304105474">got exploited</a> we fixed the (stupid!) bug, made a few smaller tweaks and have now redeployed the whole system.</p>
+<p>We have also created two more game implementation. <del>but for now we decided against activating these just yet. Instead we decided to let some time pass with the existing code challenges and activate the new ones after enough time passed without someone having managed to find any exploits.</del> We deployed these two extra challenges after one month passed without the existing contracts getting exploited.</p>
+<p>We have also lowered the lock deposit amount from 1 to 0.1 ETH because that should still be enough for the front running protection scheme to work and at the same time be more inclusive to hackers around the world.</p>
+<h3 id="addresses-of-deployed-mainnet-contracts">Addresses of deployed mainnet contracts</h3>
+<p>These are the addresses of the contracts that were deployed on the Ethereum mainnet. We also provide links to the tagged bountiful code that was used for the deployment. Please note that Etherscan doesn't yet support Fe source code verification which means that there is no code visible for these contracts at Etherscan. If you like to see Fe support on Etherscan, please <a href="https://etherscan.io/contactus">reach out to them and let them know</a>.</p>
+<p>Registry contract: <a href="https://etherscan.io/address/0x76eB86d4f92901f2af0d10feDDdA0B3B4630700D"><code>0x76eB86d4f92901f2af0d10feDDdA0B3B4630700D</code></a> (<a href="https://github.com/fe-lang/bountiful/blob/0.2.0/contracts/src/registry/registry.fe">source code</a>)</p>
+<p>Game contracts:</p>
+<ul>
+<li>15 Puzzle implementation 1: <a href="https://etherscan.io/address/0xD1175C6640A11bE625A53C8dc37ECAaC63A5d4f7"><code>0xD1175C6640A11bE625A53C8dc37ECAaC63A5d4f7</code></a> (<a href="https://github.com/fe-lang/bountiful/blob/0.2.0/contracts/src/challenges/game.fe">source code</a>)</li>
+<li>15 Puzzle implementation 2: <a href="https://etherscan.io/address/0x0A4A0FA3dD290044FDdf9F0e8cFaf7f2A21443e4"><code>0x0A4A0FA3dD290044FDdf9F0e8cFaf7f2A21443e4</code></a> (<a href="https://github.com/fe-lang/bountiful/blob/0.2.0/contracts/src/challenges/game_i8.fe">source code</a>)</li>
+<li>15 Puzzle implementation 3: <a href="https://etherscan.io/address/0x16ceA9A8D5E869F5FCD9504bea48000618a7e97c"><code>0x16ceA9A8D5E869F5FCD9504bea48000618a7e97c</code></a> (<a href="https://github.com/fe-lang/bountiful/blob/0.2.0/contracts/src/challenges/game3.fe">source code</a>)</li>
+<li>15 Puzzle implementation 4: <a href="https://etherscan.io/address/0x8b36dfB5F1F9F3B1Bf1B2b2ADa63914016A49c60"><code>0x8b36dfB5F1F9F3B1Bf1B2b2ADa63914016A49c60</code></a> (<a href="https://github.com/fe-lang/bountiful/blob/0.2.0/contracts/src/challenges/game3.fe">source code</a>)</li>
+</ul>
+<p><strong>NEW, Feb 13</strong></p>
+<ul>
+<li>15 Puzzle implementation 5: <a href="https://etherscan.io/address/0x7Bd3ad385ac3354Cd9AB400F08076f0c10ebAD12"><code>0x7Bd3ad385ac3354Cd9AB400F08076f0c10ebAD12</code></a> (<a href="https://github.com/fe-lang/bountiful/blob/master/contracts/src/challenges/game5_6.fe">source code</a>)</li>
+<li>15 Puzzle implementation 6: <a href="https://etherscan.io/address/0xA6b95deeba0089bc3d6689805179d439f714f2ed"><code>0xA6b95deeba0089bc3d6689805179d439f714f2ed</code></a> (<a href="https://github.com/fe-lang/bountiful/blob/master/contracts/src/challenges/game5_6.fe">source code</a>)</li>
+</ul>
+<h3 id="how-to-start">How to start</h3>
+<p>If you don't know how to get started, make sure to read the <a href="https://blog.fe-lang.org/posts/bountiful-break-things-and-get-paid/">initial announcement</a>, it contains all the needed information and is kept up to date.</p>
+
+        </section>
+
+        
+
+    </article>
+</main>
+
+
+    </div>
+</body>
+
+</html>

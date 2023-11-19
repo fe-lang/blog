@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    
+    
+    <title>
+        Simple DAO written in Fe, go break it!
+    </title>
+    
+
+    
+    
+
+    
+    
+        <link href=https://blog.fe-lang.org/fonts.css rel="stylesheet" />
+    
+        <!-- <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet"> -->
+
+    
+    
+
+    
+    <link rel="alternate" type="application/atom+xml" title="" href="https://blog.fe-lang.org/atom.xml">
+
+    
+    
+    
+        <link rel="stylesheet" type="text/css" href="https://blog.fe-lang.org/theme/light.css"/>
+    
+
+    <link rel="stylesheet" type="text/css" media="screen" href=https://blog.fe-lang.org/main.css />
+
+
+    
+        
+            <link rel="stylesheet" href="https://blog.fe-lang.org/custom.css">
+        
+    
+</head>
+
+<body>
+    <div class="content">
+        <header>
+  <section class="nav">
+    <div>
+      <a href="https://fe-lang.org" class="no-border">
+        <img src="https:&#x2F;&#x2F;blog.fe-lang.org/fe-logo-small.svg" alt="Fe Programming Language">
+      </a>
+    </div>
+    <input id="menu-toggle" type="checkbox" />
+    <label class='menu-button-container' for="menu-toggle">
+      <div class='menu-button'></div>
+    </label>
+    <ul class="menu">
+      <li>
+        <a href="https://fe-lang.org/docs/quickstart/index.html" class="a-non-active" title="Get started">Get
+          started</a>
+      </li>
+      <li>
+        <a href="https://fe-lang.org/docs/index.html" class="a-non-active" title="Learn">Learn</a>
+      </li>
+      <li>
+        <a href="https://discord.gg/ywpkAXFjZH" class="a-non-active" title="Community">Community</a>
+      </li>
+      <li>
+        <a href="https:&#x2F;&#x2F;blog.fe-lang.org" class="a-active" title="Blog">Blog</a>
+      </li>
+    </ul>
+  </section>
+</header>
+
+        
+        
+    
+<main>
+    <article>
+        <div class="title">
+            
+            
+    <div class="page-header">
+        Simple DAO written in Fe, go break it!<span class="primary-color" style="font-size: 1.6em">.</span>
+    </div>
+
+
+            
+                <div class="meta">
+                    Posted on 2023-11-08
+
+                    
+                </div>
+            
+        </div>
+
+        
+
+        
+        
+
+        <section class="body">
+            <p>With devconnect just around the corner, we would like to present another bug bounty opportunity.</p>
+<p>Inspired by the original <a href="https://github.com/OpenZeppelin/gnosis-multisig/blob/master/contracts/MultiSigWallet.sol">Gnosis Multisig Wallet</a>, we have written a very simple DAO contract in Fe. It can be understood as a weighted multisig wallet where the execution of transactions is determined by a group of members and their voting power measured in governance tokens. To fully understand the concept we recommend to check out the <a href="https://github.com/cburgdorf/simple_dao/blob/master/README.md">README</a> and the <a href="https://github.com/cburgdorf/simple_dao/tree/master/fe_contracts/simpledao/src">source code</a>.</p>
+<p>We've deployed <a href="https://etherscan.io/address/0xf0adbb9ed4135d1509ad039505bada942d18755f">an instance of the DAO</a> and its <a href="https://etherscan.io/address/0xbb391A44dD49D7db376F8b50011ab5DaDEA6CBbA">governance token</a> on mainnet, set up members and funded it with some ETH. We've also had it <a href="https://etherscan.io/tx/0xe9dc0280d5472c241e76973c8e98621bce0b298bd46efc1c61cd12bbbed71471">trade some of that ETH for RETH</a>.</p>
+<p>Unfortunately, Etherscan doesn't yet support source code verification for contracts written in Fe but we can verify the contracts ourselves with the latest release of <a href="https://github.com/ethereum/fe/releases/tag/v0.26.0">Fe 0.26.0</a>.</p>
+<p>Here are the steps to do that:</p>
+<ol>
+<li>
+<p>Install the latest version of Fe (0.26.0) by following the <a href="https://fe-lang.org/docs/user-guide/installation.html">installation instructions</a></p>
+</li>
+<li>
+<p>Clone the <a href="https://github.com/cburgdorf/simple_dao/">SimpleDAO repository</a></p>
+</li>
+<li>
+<p>Checkout the <code>SimpleDAOBountyDeployment</code> tag to ensure to test the exact same version of the contracts that are deployed on mainnet</p>
+</li>
+<li>
+<p>Navigate to <code>fe_contracts/simpledao</code></p>
+</li>
+<li>
+<p><code>fe verify 0xf0adbb9ed4135d1509ad039505bada942d18755f https://eth.public-rpc.com</code></p>
+</li>
+</ol>
+<p>The output should look like this:</p>
+<pre data-lang="shell" style="background-color:#2b303b;color:#c0c5ce;" class="language-shell "><code class="language-shell" data-lang="shell"><span>It&#39;s a match!✨
+</span><span>
+</span><span>Onchain contract:
+</span><span>Address: 0xf0adbb9ed4135d1509ad039505bada942d18755f
+</span><span>Bytecode: 0x60008..76b90
+</span><span>
+</span><span>Local contract:
+</span><span>Contract name: SimpleDAO
+</span><span>Source file: /path/on/your/machine/to/simple_dao/fe_contracts/simpledao/src/main.fe
+</span><span>Bytecode: 0x60008..76b90`
+</span></code></pre>
+<p>Feel free to repeat step 5 with the address of the governance contract.</p>
+<p>We invite everyone to try to hack the DAO and steal any money that is under the control of the DAO. We are also thinking about adding certain conditions (e.g. DAO balance drained to 0 ETH) to our <a href="https://blog.fe-lang.org/posts/bountiful-round-2/">existing bug bounty platform</a> so that a successful hack of the DAO would be additionally be rewarded with the jackpot of the bountiful platform. For now, you can take our word for it that if you manage to hack the DAO, you'll be manually rewarded with another 3 ETH paid by us.</p>
+
+        </section>
+
+        
+
+    </article>
+</main>
+
+
+    </div>
+</body>
+
+</html>

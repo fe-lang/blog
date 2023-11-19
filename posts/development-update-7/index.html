@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    
+    
+    <title>
+        Fe Development Update #7
+    </title>
+    
+
+    
+    
+
+    
+    
+        <link href=https://blog.fe-lang.org/fonts.css rel="stylesheet" />
+    
+        <!-- <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet"> -->
+
+    
+    
+
+    
+    <link rel="alternate" type="application/atom+xml" title="" href="https://blog.fe-lang.org/atom.xml">
+
+    
+    
+    
+        <link rel="stylesheet" type="text/css" href="https://blog.fe-lang.org/theme/light.css"/>
+    
+
+    <link rel="stylesheet" type="text/css" media="screen" href=https://blog.fe-lang.org/main.css />
+
+
+    
+        
+            <link rel="stylesheet" href="https://blog.fe-lang.org/custom.css">
+        
+    
+</head>
+
+<body>
+    <div class="content">
+        <header>
+  <section class="nav">
+    <div>
+      <a href="https://fe-lang.org" class="no-border">
+        <img src="https:&#x2F;&#x2F;blog.fe-lang.org/fe-logo-small.svg" alt="Fe Programming Language">
+      </a>
+    </div>
+    <input id="menu-toggle" type="checkbox" />
+    <label class='menu-button-container' for="menu-toggle">
+      <div class='menu-button'></div>
+    </label>
+    <ul class="menu">
+      <li>
+        <a href="https://fe-lang.org/docs/quickstart/index.html" class="a-non-active" title="Get started">Get
+          started</a>
+      </li>
+      <li>
+        <a href="https://fe-lang.org/docs/index.html" class="a-non-active" title="Learn">Learn</a>
+      </li>
+      <li>
+        <a href="https://discord.gg/ywpkAXFjZH" class="a-non-active" title="Community">Community</a>
+      </li>
+      <li>
+        <a href="https:&#x2F;&#x2F;blog.fe-lang.org" class="a-active" title="Blog">Blog</a>
+      </li>
+    </ul>
+  </section>
+</header>
+
+        
+        
+    
+<main>
+    <article>
+        <div class="title">
+            
+            
+    <div class="page-header">
+        Fe Development Update #7<span class="primary-color" style="font-size: 1.6em">.</span>
+    </div>
+
+
+            
+                <div class="meta">
+                    Posted on 2021-08-04
+
+                    
+                </div>
+            
+        </div>
+
+        
+
+        
+        
+
+        <section class="body">
+            <p>It's been a couple months since our <a href="/posts/development-update-6/">last update</a>. In this time, we've merged a total of <a href="https://github.com/ethereum/fe/pulls?q=is%3Apr+is%3Amerged+closed%3A2021-08-03%3E2021-05-29+">40 pull requests from 8 different contributors</a>. Here are some highlights.</p>
+<h2 id="we-shipped-three-more-releases">We shipped three more releases</h2>
+<ul>
+<li><a href="https://github.com/ethereum/fe/releases/tag/v0.6.0-alpha">v0.6.0-alpha</a> and <a href="https://github.com/ethereum/fe/releases/tag/v0.6.1-alpha">v0.6.1-alpha</a></li>
+<li><a href="https://github.com/ethereum/fe/releases/tag/v0.7.0-alpha">v0.7.0-alpha</a></li>
+</ul>
+<h2 id="improved-error-handling">Improved error handling</h2>
+<p><strong>Support for custom errors:</strong></p>
+<p>We added support for <code>revert &lt;expression&gt;</code> statements, where <code>&lt;expression&gt;</code> must be a struct type. The revert data is encoded as specified in <a href="https://github.com/ethereum/EIPs/issues/838">EIP-838</a>.</p>
+<p>Example:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">struct </span><span>MyError:
+</span><span>    msg: u256
+</span><span>    val: bool
+</span><span>    
+</span><span>pub def revert_custom_error():
+</span><span>    revert MyError(msg=</span><span style="color:#d08770;">100</span><span>, val=</span><span style="color:#d08770;">true</span><span>)
+</span></code></pre>
+<p>Added in <a href="https://github.com/ethereum/fe/pull/464">#464</a>.</p>
+<p><strong>Added builtin panic codes:</strong></p>
+<p>Runtime checks now revert with the same panic codes used in Solidity. These codes can be found <a href="https://docs.soliditylang.org/en/v0.8.4/control-structures.html?#panic-via-assert-and-error-via-require">here</a>.</p>
+<p>Added in <a href="https://github.com/ethereum/fe/pull/476">#476</a>.</p>
+<p><strong>Better diagnostic messages:</strong></p>
+<p>Errors found during static analysis are now printed using <a href="https://github.com/brendanzab/codespan">codespan</a>. This makes it easier to understand and fix invalid code.</p>
+<p>Example:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>error: value must be copied to memory
+</span><span>  ┌─ foo.fe:5:14
+</span><span>  │
+</span><span>5 │     self.baz(self.my_array)
+</span><span>  │              ^^^^^^^^^^^^^ this value is in storage
+</span><span>  │
+</span><span>  = Hint: values located in storage can be copied to memory using the `to_mem` function.
+</span><span>  = Example: `self.my_array.to_mem()`
+</span><span>
+</span></code></pre>
+<p>Added in <a href="https://github.com/ethereum/fe/pull/398">#398</a>.</p>
+<h2 id="abi-data-checks">ABI data checks</h2>
+<p>ABI encoded data is now checked to be well-formed before decoding. If the data being decoded is found to be ill-formed, the transaction will revert.</p>
+<p>Added in <a href="https://github.com/ethereum/fe/pull/440">#440</a>. See the PR discussion for more info.</p>
+<h2 id="other-features-and-bugfixes">Other features and bugfixes</h2>
+<ul>
+<li>Make duplicate function definitons a fatal error <a href="https://github.com/ethereum/fe/pull/455">#455</a> </li>
+<li>Fix ICE when accessing an invalid attribute on a type <a href="https://github.com/ethereum/fe/pull/445">#445</a></li>
+<li><code>__init__</code> must be pub <a href="https://github.com/ethereum/fe/pull/435">#435</a></li>
+<li>Add support for pragma statement <a href="https://github.com/ethereum/fe/pull/426">#426</a></li>
+<li>Add tutorial that deploys and uses Guestbook on Görli <a href="https://github.com/ethereum/fe/pull/420">#420</a> </li>
+<li>Make --optimize the default <a href="https://github.com/ethereum/fe/pull/449">#449</a></li>
+<li>Capitalize Map type name <a href="https://github.com/ethereum/fe/pull/431">#431</a></li>
+<li>Implement tuple destructuring <a href="https://github.com/ethereum/fe/pull/428">#428</a></li>
+<li>Basic type inference of int literals and empty arrays <a href="https://github.com/ethereum/fe/pull/429">#429</a></li>
+<li>Move tuple and list expr collection to lowering pass; support lowering of nested tuples <a href="https://github.com/ethereum/fe/pull/459">#459</a></li>
+<li>Fix ICE #469 <a href="https://github.com/ethereum/fe/pull/484">#484</a></li>
+<li>Fix ICE #450 <a href="https://github.com/ethereum/fe/pull/462">#462</a></li>
+</ul>
+<h2 id="what-s-next">What's next</h2>
+<p>Our goal of shipping a non-alpha release this year still stands. Over the next few months, we will continue hardening the compiler, improving documentation, and polishing off existing features.</p>
+<hr />
+<p>Stay tuned for more monthly updates and releases.</p>
+
+        </section>
+
+        
+
+    </article>
+</main>
+
+
+    </div>
+</body>
+
+</html>

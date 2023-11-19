@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    
+    
+    <title>
+        Fe Development Update #5
+    </title>
+    
+
+    
+    
+
+    
+    
+        <link href=https://blog.fe-lang.org/fonts.css rel="stylesheet" />
+    
+        <!-- <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet"> -->
+
+    
+    
+
+    
+    <link rel="alternate" type="application/atom+xml" title="" href="https://blog.fe-lang.org/atom.xml">
+
+    
+    
+    
+        <link rel="stylesheet" type="text/css" href="https://blog.fe-lang.org/theme/light.css"/>
+    
+
+    <link rel="stylesheet" type="text/css" media="screen" href=https://blog.fe-lang.org/main.css />
+
+
+    
+        
+            <link rel="stylesheet" href="https://blog.fe-lang.org/custom.css">
+        
+    
+</head>
+
+<body>
+    <div class="content">
+        <header>
+  <section class="nav">
+    <div>
+      <a href="https://fe-lang.org" class="no-border">
+        <img src="https:&#x2F;&#x2F;blog.fe-lang.org/fe-logo-small.svg" alt="Fe Programming Language">
+      </a>
+    </div>
+    <input id="menu-toggle" type="checkbox" />
+    <label class='menu-button-container' for="menu-toggle">
+      <div class='menu-button'></div>
+    </label>
+    <ul class="menu">
+      <li>
+        <a href="https://fe-lang.org/docs/quickstart/index.html" class="a-non-active" title="Get started">Get
+          started</a>
+      </li>
+      <li>
+        <a href="https://fe-lang.org/docs/index.html" class="a-non-active" title="Learn">Learn</a>
+      </li>
+      <li>
+        <a href="https://discord.gg/ywpkAXFjZH" class="a-non-active" title="Community">Community</a>
+      </li>
+      <li>
+        <a href="https:&#x2F;&#x2F;blog.fe-lang.org" class="a-active" title="Blog">Blog</a>
+      </li>
+    </ul>
+  </section>
+</header>
+
+        
+        
+    
+<main>
+    <article>
+        <div class="title">
+            
+            
+    <div class="page-header">
+        Fe Development Update #5<span class="primary-color" style="font-size: 1.6em">.</span>
+    </div>
+
+
+            
+                <div class="meta">
+                    Posted on 2021-04-29
+
+                    
+                </div>
+            
+        </div>
+
+        
+
+        
+        
+
+        <section class="body">
+            <p>We've been hard at work since our <a href="/posts/development-update-4/">last update</a> and can't wait to talk about all the latest progress we've made. Let's dive right in.</p>
+<h2 id="team-growth">Team growth</h2>
+<p>Not only did we receive a steady flow of external contributions, we've also grown the core Fe team by two new (part-time) software engineers. Say hello to Sean and Satyam who will be helping us on our way to change the EVM language space. Fe is happy to have you 🙏</p>
+<p>Part of their efforts have already formed the latest release that just shipped.</p>
+<h2 id="we-shipped-v0-4-0-alpha-diamond">We shipped v0.4.0-alpha &quot;Diamond&quot;</h2>
+<p>We've actually shipped two releases since the last update but many of the changes from the <a href="https://github.com/ethereum/fe/releases/tag/v0.3.0-alpha">0.3.0-alpha</a> release were already covered in our <a href="/posts/development-update-4/">last development update</a>. As usual, the entire list of changes can be found in the changelog on the <a href="https://github.com/ethereum/fe/releases/tag/v0.4.0-alpha">release page</a>. In this article, we'll focus on the two most exciting recent developments. </p>
+<h2 id="a-brand-new-parser">A brand new parser</h2>
+<p>Not only does the 0.4.0-alpha release come with a shiny name, it comes with a new, shiny parser, too.</p>
+<p>Our old parser was by far the oldest part of the code base and it had served us well up to this point. Shout out to <a href="https://github.com/davesque">David</a> who wrote it when he originally started the project under a different name.</p>
+<p>As we are moving closer to our first non alpha release we've made it a high priority for Fe to have high quality, context-aware error messages. While this may not have been impossible with the old parser, the new handwritten recursive descent parser gives us all the flexibility and clarity that we need to enable great rust style error messages.</p>
+<p>To give an example, consider this wrongly formatted source code:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>contract Example:
+</span><span>val:u8
+</span></code></pre>
+<p>While we can and will tune the quality of our error messages, the following example of an actual Fe error message does already demonstrate the improved user experience that we got out of the parser rewrite so far.</p>
+<p><img src="https://storage.googleapis.com/ethereum-hackmd/upload_3c6767184497bd08fddde6d084ad6081.png" alt="" /></p>
+<p>We currently continue to streamline our error reporting across the different processing stages to take advantage of the improvements on all levels.</p>
+<p>While the parser rewrite was mostly motivated by improving our error messages it will also help us to implement new features faster.</p>
+<h2 id="lowering-pass">Lowering pass</h2>
+<p>The other major improvement that just landed in the latest release is an entirely new compile phase called the &quot;lowering pass&quot;. Lowering is compiler speak for what is commonly referred to as &quot;desugaring&quot;.</p>
+<p>In other words, whenever we say that something is just &quot;syntactic sugar&quot; for a longer, less-elegant syntax, it is the lowering pass's job to take that code and turn it into the less-elegant, but simpler syntax. This is a technique that many modern compilers use, including rustc.</p>
+<p>By using lowering, we are able to simplify the implementation of new features and reduce compiler complexity.</p>
+<h3 id="tuples">Tuples</h3>
+<p>To give a concrete example, our latest release comes with support for tuples, which can be used like this:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>contract Foo:
+</span><span>    pub def bar(my_num: u256, my_bool: bool) -&gt; (u256, bool):
+</span><span>        return (my_num, my_bool)
+</span></code></pre>
+<p>Fe's new lowering pass rewrites this as follows:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>struct tuple_u256_bool:
+</span><span>    item0: u256
+</span><span>    item1: bool
+</span><span>
+</span><span>contract Foo:
+</span><span>    pub def bar(my_num: u256, my_bool: bool) -&gt; tuple_u256_bool:
+</span><span>        return tuple_u256_bool(item0=my_num, item1=my_bool)
+</span></code></pre>
+<p>As you can see, Tuples don't actually exist past the lowering stage, as Tuples in Fe are just syntactic sugar over structs (which by the way, is also true for Rust).</p>
+<p>We also use the lowering pass for augmented assignments (e.g. <code>x += 1</code>) and plan to use it for many of the upcoming features. It's a real game changer, as it helps us to avoid code duplication and reduces the overall maintenance cost for the features we develop.</p>
+<h2 id="other-features-and-bugfixes">Other features and bugfixes</h2>
+<ul>
+<li>Support for revert messages in assert statements (<a href="https://github.com/ethereum/fe/issues/288">#288</a>)</li>
+<li>Support for augmented assignments (<a href="https://github.com/ethereum/fe/issues/338">#338</a>)</li>
+<li>Reject invalid emit (<a href="https://github.com/ethereum/fe/issues/211">#211</a>)</li>
+<li>Properly tokenize numeric literals when they start with 0 (<a href="https://github.com/ethereum/fe/issues/331">#331</a>)</li>
+<li>Reject non-string assert reasons as type error (<a href="https://github.com/ethereum/fe/issues/335">#335</a>)</li>
+<li>Reject code that creates a circular dependency when using <code>create</code> or <code>create2</code> (<a href="https://github.com/ethereum/fe/issues/362">#362</a>)</li>
+</ul>
+<h2 id="what-s-next">What's next</h2>
+<p>Our plan is to ship our first non-alpha release in 2021 and hence our focus is currently on implementing the essential features that are still missing as well as eleminating bugs and improving the robustness of the compiler which includes building out tooling for <em>differential contract fuzzing</em>.</p>
+<p>We will soon write a dedicated blog post that will shed more light on our plans for Fe's road to production.</p>
+<hr />
+<p>Stay tuned for more monthly updates and releases.</p>
+
+        </section>
+
+        
+
+    </article>
+</main>
+
+
+    </div>
+</body>
+
+</html>

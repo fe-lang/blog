@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    
+    
+    <title>
+        Beyond alpha: Preparing Fe for the future
+    </title>
+    
+
+    
+    
+
+    
+    
+        <link href=https://blog.fe-lang.org/fonts.css rel="stylesheet" />
+    
+        <!-- <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet"> -->
+
+    
+    
+
+    
+    <link rel="alternate" type="application/atom+xml" title="" href="https://blog.fe-lang.org/atom.xml">
+
+    
+    
+    
+        <link rel="stylesheet" type="text/css" href="https://blog.fe-lang.org/theme/light.css"/>
+    
+
+    <link rel="stylesheet" type="text/css" media="screen" href=https://blog.fe-lang.org/main.css />
+
+
+    
+        
+            <link rel="stylesheet" href="https://blog.fe-lang.org/custom.css">
+        
+    
+</head>
+
+<body>
+    <div class="content">
+        <header>
+  <section class="nav">
+    <div>
+      <a href="https://fe-lang.org" class="no-border">
+        <img src="https:&#x2F;&#x2F;blog.fe-lang.org/fe-logo-small.svg" alt="Fe Programming Language">
+      </a>
+    </div>
+    <input id="menu-toggle" type="checkbox" />
+    <label class='menu-button-container' for="menu-toggle">
+      <div class='menu-button'></div>
+    </label>
+    <ul class="menu">
+      <li>
+        <a href="https://fe-lang.org/docs/quickstart/index.html" class="a-non-active" title="Get started">Get
+          started</a>
+      </li>
+      <li>
+        <a href="https://fe-lang.org/docs/index.html" class="a-non-active" title="Learn">Learn</a>
+      </li>
+      <li>
+        <a href="https://discord.gg/ywpkAXFjZH" class="a-non-active" title="Community">Community</a>
+      </li>
+      <li>
+        <a href="https:&#x2F;&#x2F;blog.fe-lang.org" class="a-active" title="Blog">Blog</a>
+      </li>
+    </ul>
+  </section>
+</header>
+
+        
+        
+    
+<main>
+    <article>
+        <div class="title">
+            
+            
+    <div class="page-header">
+        Beyond alpha: Preparing Fe for the future<span class="primary-color" style="font-size: 1.6em">.</span>
+    </div>
+
+
+            
+                <div class="meta">
+                    Posted on 2023-03-31
+
+                    
+                </div>
+            
+        </div>
+
+        
+
+        
+        
+
+        <section class="body">
+            <p>Today we like to reflect on our progress and share our plans for the future of Fe. In December 2022 Fe hit the Ethereum mainnet for the very first time with the <a href="/posts/bountiful-break-things-and-get-paid">deployment of our bug bounty contest</a>. Although it was hacked shortly after, no <em>serious</em> issues were revealed. The initial hack was just a sloppy fat-finger-copy-and-paste issue on our end but we invite you to read the inside story from the bounty hunter's perspective because it's such a great read.</p>
+<div style="display: flex; justify-content: center;">
+<blockquote class="twitter-tweet"<p lang="en" dir="ltr">I cracked <a href="https://twitter.com/official_fe?ref_src=twsrc%5Etfw">@official_fe</a> &#39;s bountiful code challenge 💸<br><br>I was beyond impressed by the language and had a wonderful time poring over the code<br><br>Here&#39;s how it happened - including my thoughts on Fe 🧵</p>&mdash; plotchy (@plotchy) <a href="https://twitter.com/plotchy/status/1600894668304105474?ref_src=twsrc%5Etfw">December 8, 2022</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+</div>
+<p>If you've been following our <a href="/posts/bountiful-round-2">recent updates</a>, you will know that we quickly fixed the issue and restarted the contest and that the ongoing bug bounty contest did not reveal any critical bugs. In fact, the bounty is still up for grabs, go check it out if you're interested.</p>
+<p>This certainly doesn't mean that Fe is bug-free, quite the contrary, we expect the compiler to still have bugs and we want to invite you to find and report them. It also doesn't mean that it's a polished language yet. We are still missing important features and have to iron out rough edges.</p>
+<p>However, it does mean that we are confident enough to drop the <code>-alpha</code> marker from releases, starting with the latest <a href="https://github.com/ethereum/fe/releases/tag/v0.22.0">0.22.0</a> release. As we've <a href="/posts/path-to-production">mentioned in the past</a>, dropping the <code>-alpha</code> marker does not imply that the language is stable or feature-complete. It will still take a long way to go before we get anywhere close to that. As we continue to follow semantic versioning our <code>0.x</code> releases continue to be <em>unstable</em>.</p>
+<h2 id="a-bright-future">A bright future</h2>
+<p>In fact, we are currently in the process of rewriting large parts of the Fe compiler. This is necessary because the existing code base is not well suited for the features we want to add in the future. When the current rewrite is finished it will enable more advanced features such as:</p>
+<ul>
+<li>Enhanced support for generics (e.g. generic structs, generic traits, multiple trait bounds, etc.)</li>
+<li>Improved trait support (e.g. trait inheritance, trait specialization, etc.)</li>
+<li>Const functions (Functions that can run at <em>compile time</em> rather than at <em>runtime</em>)</li>
+<li>Type inference</li>
+<li>Flexible abstraction on ABI encoding/decoding</li>
+<li>Support for Language Server Protocol (LSP)</li>
+</ul>
+<p>Additionally, we're working to replace Fe's Solidity backend. Fe currently uses YUL as its intermediate language and relies on the Solidity compiler to convert YUL to EVM bytecode. We're developing a native LLVM-inspired backend called <a href="https://github.com/fe-lang/sonatina">Sonatina</a>, which will replace this dependency, allowing for more aggressive optimizations and a streamlined Rust-only compilation process.</p>
+<p>In conclusion, we're thrilled with the progress Fe has made and are confident that the upcoming improvements will further enhance the language. We invite you to join us in exploring and experimenting with Fe as it continues to mature. Your feedback and contributions are invaluable as we work together to build a robust, feature-rich programming language.</p>
+<p>Thank you for your support, and stay tuned for more exciting developments!</p>
+
+        </section>
+
+        
+
+    </article>
+</main>
+
+
+    </div>
+</body>
+
+</html>

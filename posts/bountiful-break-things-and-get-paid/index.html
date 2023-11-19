@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    
+    
+    <title>
+        bountiful: break things and get paid
+    </title>
+    
+
+    
+    
+
+    
+    
+        <link href=https://blog.fe-lang.org/fonts.css rel="stylesheet" />
+    
+        <!-- <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet"> -->
+
+    
+    
+
+    
+    <link rel="alternate" type="application/atom+xml" title="" href="https://blog.fe-lang.org/atom.xml">
+
+    
+    
+    
+        <link rel="stylesheet" type="text/css" href="https://blog.fe-lang.org/theme/light.css"/>
+    
+
+    <link rel="stylesheet" type="text/css" media="screen" href=https://blog.fe-lang.org/main.css />
+
+
+    
+        
+            <link rel="stylesheet" href="https://blog.fe-lang.org/custom.css">
+        
+    
+</head>
+
+<body>
+    <div class="content">
+        <header>
+  <section class="nav">
+    <div>
+      <a href="https://fe-lang.org" class="no-border">
+        <img src="https:&#x2F;&#x2F;blog.fe-lang.org/fe-logo-small.svg" alt="Fe Programming Language">
+      </a>
+    </div>
+    <input id="menu-toggle" type="checkbox" />
+    <label class='menu-button-container' for="menu-toggle">
+      <div class='menu-button'></div>
+    </label>
+    <ul class="menu">
+      <li>
+        <a href="https://fe-lang.org/docs/quickstart/index.html" class="a-non-active" title="Get started">Get
+          started</a>
+      </li>
+      <li>
+        <a href="https://fe-lang.org/docs/index.html" class="a-non-active" title="Learn">Learn</a>
+      </li>
+      <li>
+        <a href="https://discord.gg/ywpkAXFjZH" class="a-non-active" title="Community">Community</a>
+      </li>
+      <li>
+        <a href="https:&#x2F;&#x2F;blog.fe-lang.org" class="a-active" title="Blog">Blog</a>
+      </li>
+    </ul>
+  </section>
+</header>
+
+        
+        
+    
+<main>
+    <article>
+        <div class="title">
+            
+            
+    <div class="page-header">
+        bountiful: break things and get paid<span class="primary-color" style="font-size: 1.6em">.</span>
+    </div>
+
+
+            
+                <div class="meta">
+                    Posted on 2022-12-06
+
+                    
+                </div>
+            
+        </div>
+
+        
+
+        
+        
+
+        <section class="body">
+            <p><strong>UPDATE: This article is kept up to date as we go through multiple rounds of the bug bounty contest. We create short announcement posts as needed but this post remains in charge to explain the general details of the contest</strong></p>
+<p><strong>ROUND #2 IS LIVE: <a href="/posts/bountiful-round-2">Read the announcement</a></strong>.</p>
+<p>Today we are unveiling the <em>bountiful</em> project. It is - to our knowledge - the first Fe code deployed to the Ethereum mainnet. This marks an important milestone for Fe on its road to become a production-ready EVM language.</p>
+<h3 id="introducing-bountiful">Introducing <em>bountiful</em></h3>
+<p>As we mentioned before, one of the milestones on <a href="https://blog.fe-lang.org/posts/path-to-production/">Fe's path to production</a> is hosting community bug contests. In this way we want to encourage the community to search for compiler bugs. The <em>bountiful</em> project is our initial effort to do this. Not only did we have a lot of fun trying out our own dogfood, we are also setting an example of how Fe can be used in a real mainnet project.</p>
+<h3 id="how-it-works">How it works</h3>
+<p>At its core is a registry that lets us register bug bounty challenges. All these challenges have one thing in common, they can only be solved if one of the following conditions is met:</p>
+<ul>
+<li>a bug in the implementation of the code challenge was found and exploited</li>
+<li>a bug in the Fe language itself was found and exploited</li>
+</ul>
+<p>To incentivize people to find these exploits the system lets the exploiter claim a bounty of ETH in a permissionless way. We are starting with a prize money of <strong>3 ETH</strong> which is subject to changes in the future.</p>
+<p>Although we are mainly interested in discovering compiler bugs, exposing bugs in the implementation of any of the code challenges is also valuable, as these can provide important clues where the language should make it even harder to hide bugs.</p>
+<h3 id="the-challenges">The challenges</h3>
+<p>While the system is designed to allow registering an unlimited number of challenges we are starting with <strong>4</strong> different implementations of the popular 15 puzzle. In case you've never played this before, <a href="https://15puzzle.netlify.app/">here's a link to a free online version of the game</a>. It's a frame with 16 squares and 15 movable tiles that need to be brought in order. What's interesting about this game is that there are certain game states that are impossible to solve. The games that we have deployed all start from such an unsolvable game state. That means that one can only win the game by exploiting a bug either in the implementation of the game or in the Fe language directly. For instance, imagine a bug that gives us unguarded access to modify the storage space of the game contract in unintended ways. If such a bug exists, someone could bring the game into the winning state essentially through bypassing the rules of the game.
+Please note that these games were not written for gas efficiency, elegance or conciseness - quite the contrary. We have written them purposefully verbose to maximize the potential of exposing bugs. For the same purpose have we chosen to create multiple implementations of the same game so that we can exercise different approaches and language features.</p>
+<h3 id="frontrunning-prevention">Frontrunning prevention</h3>
+<p><a href="https://www.paradigm.xyz/2020/08/ethereum-is-a-dark-forest">Ethereum is a dark forest</a> which is why we need a front-running prevention mechanism. In short, if it is possible to send a transaction that will make the sender richer (in our case by exploiting a Fe bug and claiming ETH prize money) we can be sure that somewhere there's a bot noticing it who will perform the same transaction faster leaving the honest claimer empty handed.</p>
+<p>To avoid this we've come up with a very simple front-running prevention mechanism. Here is how it works:</p>
+<ol>
+<li>As a bounty hunter we first try to find an exploit by attacking the contracts locally on our own development machine (more on that later)</li>
+<li>Let's suppose we have found a way to bring the code challenge into its <code>solved</code> state on our own local machine</li>
+<li>To replicate our success on the actual bug bounty registry and claim the prize we first have to aquire an exclusive lock via <code>registry.lock()</code></li>
+</ol>
+<p>Because it's fun to look at Fe code, here is how <code>lock</code> is implemented:</p>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">lock</span><span>(</span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">self</span><span>, </span><span style="color:#bf616a;">ctx</span><span>: Context) {
+</span><span>    </span><span style="color:#b48ead;">if </span><span style="color:#bf616a;">self</span><span>.</span><span style="color:#96b5b4;">is_locked</span><span>(ctx) {
+</span><span>        revert AlreadyLocked()
+</span><span>    } </span><span style="color:#b48ead;">else if</span><span> ctx.</span><span style="color:#96b5b4;">msg_value</span><span>() &lt; </span><span style="color:#d08770;">LOCK_DEPOSIT_IN_WEI </span><span>{
+</span><span>        revert InvalidDeposit()
+</span><span>    } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>        </span><span style="color:#bf616a;">self</span><span>.lock = ClaimLock(
+</span><span>            claimer:ctx.</span><span style="color:#96b5b4;">msg_sender</span><span>(),
+</span><span>            valid_until_block: ctx.</span><span style="color:#96b5b4;">block_number</span><span>() + </span><span style="color:#d08770;">LOCK_PERIOD_IN_BLOCKS
+</span><span>        )
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>The <code>ctx</code> parameter is automatically provided for public contract functions and is Fe's way to provide access to various EVM features without relying on globals. It also makes it simple to see what kind of capabilities a function has just by looking at its signature while at the same time avoiding the introduction of unnecessary keywords. A function that doesn't take <code>self</code> nor <code>ctx</code> is obviously <em>pure</em>.</p>
+<p>As we can see, an exclusive lock is provided if no one else currently holds a lock and if the minimum <em>lock deposit</em> is provided as the transaction value. The lock deposit is needed to prevent someone from repetitively acquiring locks to gain more time to find an exploit while simultaneously preventing others to claim the bounty. The lock deposit is paid back together with the actual prize money if a successful claim was made within the granted <em>lock period</em>. If the prize money is not claimed over the duration of the lock period the lock deposit will end up as extra money to grow the jackpot. </p>
+<ol start="4">
+<li>
+<p>Now that we have acquired an exclusive lock we have a window of <code>1000</code> blocks (roughly 3 hours) to bring <em>any</em> of the challenges into the <em>solved</em> state. Cautious as we are, we will wait a few more blocks before we present the solution.</p>
+</li>
+<li>
+<p>Now it's time to solve one of the challenges, which means we exploit the contract in the same way that we have successfully done before on our local development machine. It is important to point out that no other party can interfere with any of the code challenges because we have obtained an exclusive lock.</p>
+</li>
+<li>
+<p>Next we call <code>registry.claim(address_of_challenge)</code> to claim the prize money. Let's look at the implementation of <code>claim</code> as well.</p>
+</li>
+</ol>
+<pre data-lang="rust" style="background-color:#2b303b;color:#c0c5ce;" class="language-rust "><code class="language-rust" data-lang="rust"><span style="color:#b48ead;">pub fn </span><span style="color:#8fa1b3;">claim</span><span>(</span><span style="color:#bf616a;">self</span><span>, </span><span style="color:#b48ead;">mut </span><span style="color:#bf616a;">ctx</span><span>: Context, </span><span style="color:#bf616a;">challenge</span><span>: address) {
+</span><span>    </span><span style="color:#bf616a;">self</span><span>.</span><span style="color:#96b5b4;">validate_owns_lock</span><span>(ctx, owner: ctx.</span><span style="color:#96b5b4;">msg_sender</span><span>())
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">if</span><span> not </span><span style="color:#bf616a;">self</span><span>.open_challenges[challenge] {
+</span><span>        revert InvalidClaim()
+</span><span>    } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>        </span><span style="color:#b48ead;">let</span><span> puzzle: ISolvable = ISolvable(challenge)
+</span><span>        </span><span style="color:#b48ead;">if</span><span> puzzle.</span><span style="color:#96b5b4;">is_solved</span><span>() {
+</span><span>            ctx.</span><span style="color:#96b5b4;">send_value</span><span>(to: ctx.</span><span style="color:#96b5b4;">msg_sender</span><span>(), wei: ctx.</span><span style="color:#96b5b4;">self_balance</span><span>())
+</span><span>        } </span><span style="color:#b48ead;">else </span><span>{
+</span><span>            revert InvalidClaim()
+</span><span>        }
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<p>Notice that <code>claim</code> also takes <code>ctx</code> as its second parameter but just like <code>self</code> it doesn't need to be provided by the external caller. Also notice the <code>mut</code> keyword before <code>ctx: Context</code>, that's because mutability is always <em>explicit</em> in Fe. This makes it very easy to see where changes are happening.</p>
+<p>The first thing <code>claim</code> does is that it validates that the caller owns the lock. It then goes on to validate that the <code>challenge</code> address is indeed a registered challenge. It then goes on to call <code>is_solved()</code> on the challenge and pays out the prize money in case it returns <code>true</code>. In other words, getting <code>is_solved()</code> to return <code>true</code> is what is actually needed to win the money!</p>
+<ol start="7">
+<li>Profit! 💸</li>
+</ol>
+<h3 id="i-m-game-where-do-we-start">I'm game! Where do we start?</h3>
+<p>So you want to crack the jackpot? Here's how it really works. We don't expect it to be easy. If someone manages to exploit the contracts they sure know what they are doing. They will know how to approach this and which tools to use. This is to say that we don't have much guidance on <em>how</em> to actually find an exploit (if ever!).</p>
+<p>But still, here's a basic start</p>
+<ol>
+<li>
+<p>First, clone the <a href="https://github.com/fe-lang/bountiful">code from GitHub</a></p>
+</li>
+<li>
+<p>Next, run <code>npx hardhat test</code></p>
+</li>
+</ol>
+<p>This will execute all tests on all challenges as well as a bunch more tests on the registry directly.</p>
+<p>Some of these tests can give us an idea how to win the game and claim the prize money but keep in mind that these tests start from an easily solvable game state which is not the case for the deployed live contracts.</p>
+<p>A good starting point might be to generate and inspect the bytecode as well as the intermediate representation (in YUL) for any of the challenges via <code>fe build path/to/challenge.fe --emit yul,bytecode</code>.</p>
+<p>In practice, finding a bug hopefully won't be as easy as calling one of the regular game APIs with regular input. If at all possible it will hopefully require real wizardry.</p>
+<h3 id="addresses-of-deployed-mainnet-contracts">Addresses of deployed mainnet contracts</h3>
+<p>These are the addresses of the contracts that were deployed on the Ethereum mainnet. We also provide links to the tagged bountiful code that was used for the deployment. Please note that Etherscan doesn't yet support Fe source code verification which means that there is no code visible for these contracts at Etherscan. If you like to see Fe support on Etherscan, please <a href="https://etherscan.io/contactus">reach out to them and let them know</a>.</p>
+<p><strong>The following addresses are out of date because the initial round ended with one of the contracts getting exploited. Read our <a href="https://twitter.com/official_fe/status/1600810003253719040">a short twitter thread explaining what happened</a>.</strong></p>
+<p><strong>For the up to date addresses please refer to the <a href="/posts/bountiful-round-2">latest announcement of round #2</a>.</strong></p>
+<p>Registry contract: <del><a href="https://etherscan.io/address/0xcF19640dfB72762d6B75d6AfeEcFb5d54092f768"><code>0xcF19640dfB72762d6B75d6AfeEcFb5d54092f768</code></a> (<a href="https://github.com/fe-lang/bountiful/blob/0.1.0/contracts/src/registry/registry.fe">source code</a>)</del></p>
+<p>Game contracts:</p>
+<ul>
+<li>15 Puzzle implementation 1: <del><a href="https://etherscan.io/address/0x08554F7A7674841053d55f9ACe77D698FD25b99e"><code>0x08554F7A7674841053d55f9ACe77D698FD25b99e</code></a> (<a href="https://github.com/fe-lang/bountiful/blob/0.1.0/contracts/src/challenges/game.fe">source code</a>)</del></li>
+<li><del>15 Puzzle implementation 2: <a href="https://etherscan.io/address/0x8e3C037b9f76DE7E1b094C6b7BEEa6e80dCB3f64"><code>0x8e3C037b9f76DE7E1b094C6b7BEEa6e80dCB3f64</code></a> (<a href="https://github.com/fe-lang/bountiful/blob/0.1.0/contracts/src/challenges/game_i8.fe">source code</a>)</del></li>
+<li>15 Puzzle implementation 3: <del><a href="https://etherscan.io/address/0xa48607017E7E79011bb0C6B2cB2a462808015449"><code>0xa48607017E7E79011bb0C6B2cB2a462808015449</code></a> (<a href="https://github.com/fe-lang/bountiful/blob/0.1.0/contracts/src/challenges/game3.fe">source code</a>)</del></li>
+<li>15 Puzzle implementation 4: <del><a href="https://etherscan.io/address/0x27BD48e8098aAf734005483E2cD4a029F70ADc0D"><code>0x27BD48e8098aAf734005483E2cD4a029F70ADc0D</code></a> (<a href="https://github.com/fe-lang/bountiful/blob/0.1.0/contracts/src/challenges/game3.fe">source code</a>)</del></li>
+</ul>
+<h3 id="final-words">Final words</h3>
+<p>Creating a new programming language takes a big effort. In an environment where potentially huge amounts of money rely on the safety of the language we have to be extra cautious before we encourage people to use Fe for the development of serious projects. All the more are we excited to be the first to deploy Fe code to mainnet with real money on the line. If you like Fe to succeed please share the word with colleagues and friends. Also please don't hesitate to <a href="https://github.com/ethereum/fe/issues">file bugs and feature requests</a> or hop in our <a href="https://discord.gg/ywpkAXFjZH">discord</a> for any feedback and questions.</p>
+<p>Get the Jackpot anon!</p>
+
+        </section>
+
+        
+
+    </article>
+</main>
+
+
+    </div>
+</body>
+
+</html>
