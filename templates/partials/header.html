@@ -31,7 +31,10 @@
     {% endif %}
         <!-- <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet"> -->
 
-    {# Analytics #}
+    {# Analytics - Umami #}
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="ed2d919e-0e43-45d9-ac8a-7bed61075d36"></script>
+
+    {# Analytics - GoatCounter (legacy, not configured) #}
     {% if config.extra.analytics.enabled and config.extra.analytics.goatcounter_user %}
         {% set user = config.extra.analytics.goatcounter_user %}
         {% set host = config.extra.analytics.goatcounter_host | default(value="goatcounter.com") %}
