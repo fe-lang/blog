@@ -1,3 +1,8 @@
+// Color scheme override to match fe-lang.org (indigo instead of red)
+:root {
+  --primary-color: #4f46e5;  // indigo-600
+}
+
 // Ugly hack. The main site fe-lang.org uses tailwind and I just copied computed styles and targeted
 // the relevant elements to apply whatever was computed.
 
@@ -85,7 +90,7 @@ header {
     --text-1: rgba(0, 0, 0, 66%);
     --bg-0: #fff;
     --bg-1: #f2f2f2;
-    --primary-color: #ef5350;
+    --primary-color: #4f46e5;
     --hover-color: white;
     --border-color: var(--bg-1);
     --text-font: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
@@ -119,7 +124,7 @@ header {
     --text-1: rgba(0, 0, 0, 66%);
     --bg-0: #fff;
     --bg-1: #f2f2f2;
-    --primary-color: #ef5350;
+    --primary-color: #4f46e5;
     --hover-color: white;
     --border-color: var(--bg-1);
     --text-font: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
@@ -166,7 +171,7 @@ header {
     --text-1: rgba(0, 0, 0, 66%);
     --bg-0: #fff;
     --bg-1: #f2f2f2;
-    --primary-color: #ef5350;
+    --primary-color: #4f46e5;
     --hover-color: white;
     --border-color: var(--bg-1);
     --text-font: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
@@ -209,7 +214,7 @@ header {
   a:hover {
     --tw-text-opacity: 1;
     color: #fff;
-    background-color: rgb(55, 65, 81);
+    background-color: #4f46e5;  // indigo-600
   }
 
 @media (max-width: 700px) {
