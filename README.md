@@ -1,5 +1,5 @@
 
-<img src="https://raw.githubusercontent.com/ethereum/fe/master/logo/fe_svg/fe_source.svg" width="150px">
+<img src="static/fe-box-solid.png" width="150px">
 
 ## Fe blog
 
