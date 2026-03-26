@@ -6,7 +6,11 @@ date = "2026-03-31"
 
 In November 2023, we released Fe v0.26.0. Then, things went quiet. We spent the time rebuilding the compiler from the ground up.
 
-Today we are releasing **Fe 26.0.0**. This post covers why we rewrote the compiler, what changed, and where the project stands now.
+## What is Fe?
+
+Fe is what on-chain development looks like when built with a decade of language design behind it. Statically typed and EVM-native, it pairs Rust-inspired syntax with a message-passing model that reflects how the EVM actually executes. Generics, traits, pattern matching, and higher-kinded types give you the expressiveness of a modern language, while an effect system makes every side effect visible in the function signature. A built-in package manager, formatter, test runner, and language server ship as a single toolchain.
+
+Today we are releasing Fe 26.0.0! A new compiler, a new type system, and in many ways a new language, while staying true to Fe's original design principles: **safety, explicitness, and readability**.
 
 ## Why a rewrite?
 
@@ -16,17 +20,15 @@ The old compiler had been extended incrementally over the years and some of its 
 
 We chose to start over to build the foundations these features actually require. The result is a new compiler with a powerful type system, a new contract interaction model, and a modern developer experience. It is not an incremental update. It is a fresh start. This is also reflected in the version number and why we called it 26.0.0 instead of 0.27.0. New releases will follow the pattern of `<year>.<minor>.<patch>`, so this is the first release of 2026. The fresh start also extends to the project's home: Fe is no longer housed at the Ethereum Foundation and now lives at the [Argot Collective](https://argot.org), a research collective focused on language and tooling work for the Ethereum ecosystem.
 
-## The language
-
-Fe 26.0.0 is a new compiler, a new type system, and in many ways a new language, while staying true to Fe's original design principles: **safety, explicitness, and readability**.
-
 ### EVM-native message passing
 
-The old contract interaction model has been replaced. Contracts now communicate through `msg` types and `recv` handlers, a design that directly mirrors the EVM's transaction-based execution model.
+The old contract interaction model has been replaced. This is not just a syntactic change; it’s a structural shift that aligns the language with the EVM's actual execution model.
 
-This is not just a syntactic change. The new model is structurally better and eliminates a class of issues that plagued the previous approach. One shortcoming of the old model was that contracts and structs very much looked alike on the surface, but had very different semantics. In the new model, contracts are intentionally very different from structs. For instance, they can not have functions apart from the special `init` constructor.
+Previously, contracts and structs looked almost identical, masking their fundamentally different natures: a struct is a data structure in memory, while a contract is a stateful entity on-chain with a unique address. In Fe 26.0.0, this distinction is explicit. Contracts can no longer hold arbitrary functions; they are strictly defined by an `init` constructor and `recv` handlers that process specific `msg` types.
 
-Another issue was how contracts would expose their public functions in a way that plays nicely with the existing Solidity ABI. Let's serve Uniswap's `function exactInputSingle(.., uint24 fee,..)` as an example. Not only does idiomatic Fe code use snake case (e.g. `exact_input_single`), but Solidity's ABI also uses types that we do not want to support as built-in types in Fe (e.g. `uint24`). The new message-passing model is flexible enough to support different ABIs and the Fe standard library includes a module to support the Solidity ABI without making it a core part of the language.
+This design mirrors how the EVM actually operates by receiving transactions and dispatching logic. It enforces a clean separation of concerns: contracts act as thin entry points that delegate complex logic to pure functions, structs, and traits. The result is a more modular architecture where the "heavy lifting" lives in testable, reusable components outside the contract shell.
+
+Another issue was how contracts would expose their public functions in a way that plays nicely with the existing Solidity ABI. Let's take Uniswap's `function exactInputSingle(.., uint24 fee,..)` as an example. Not only does idiomatic Fe code use snake case (e.g. `exact_input_single`), but Solidity's ABI also uses types that we do not want to support as built-in types in Fe (e.g. `uint24`). The new message-passing model is flexible enough to support different ABIs and the Fe standard library includes a module to support the Solidity ABI without making it a core part of the language.
 
 ### Explicit by default
 
