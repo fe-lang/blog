@@ -23,6 +23,10 @@ In any case, solving a challenge allows you to permissionlessly claim an ETH pri
 
 We've created a website at [bountiful.fe-lang.org](https://bountiful.fe-lang.org/) that serves as the main entry point to the platform. It includes a list of active challenges, instructions on how to get started and links to the code repositories, deployed contracts, and more.
 
+## Verified on Sourcify
+
+[Sourcify](https://sourcify.dev/) already supports Fe, and the bountiful contracts are verified there. Verification of more complex multi-file workspaces isn't fully supported yet, so we used flattened sources as a workaround for most contracts. Improving first-class workspace support is something we'd like to tackle together with the Sourcify team going forward.
+
 ## Where do we go from here?
 
 We are starting with a small set of challenges, but we plan to add more over time. We are also starting with small prizes of currently 0.25 ETH per challenge, but we plan to increase both the number of challenges and the prize amounts as we go.
