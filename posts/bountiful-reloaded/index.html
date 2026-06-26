@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    
+    
+    <title>
+        Bountiful: reloaded
+    </title>
+    
+
+    
+    
+
+    
+    
+        <link href=https://blog.fe-lang.org/fonts.css rel="stylesheet" />
+    
+        <!-- <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet"> -->
+
+    
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="ed2d919e-0e43-45d9-ac8a-7bed61075d36"></script>
+
+    
+    
+
+    
+    <link rel="alternate" type="application/atom+xml" title="" href="https://blog.fe-lang.org/atom.xml">
+
+    
+    
+    
+        <link rel="stylesheet" type="text/css" href="https://blog.fe-lang.org/theme/light.css"/>
+    
+
+    <link rel="stylesheet" type="text/css" media="screen" href=https://blog.fe-lang.org/main.css />
+
+
+    
+        
+            <link rel="stylesheet" href="https://blog.fe-lang.org/custom.css">
+        
+    
+</head>
+
+<body>
+    <div class="content">
+        <header>
+  <section class="nav">
+    <div>
+      <a href="https://fe-lang.org" class="no-border">
+        <img src="https:&#x2F;&#x2F;blog.fe-lang.org/fe-bare.svg" alt="Fe Programming Language">
+      </a>
+    </div>
+    <input id="menu-toggle" type="checkbox" />
+    <label class='menu-button-container' for="menu-toggle">
+      <div class='menu-button'></div>
+    </label>
+    <ul class="menu">
+      <li>
+        <a href="https://fe-lang.org/getting-started/what-is-fe/" class="a-non-active" title="Get started">Get started</a>
+      </li>
+      <li>
+        <a href="https://fe-lang.org/getting-started/key-concepts/" class="a-non-active" title="Learn">Learn</a>
+      </li>
+      <li>
+        <a href="https://fe-lang.zulipchat.com/join/dqvssgylulrmjmp2dx7vcbrq" class="a-non-active" title="Community">Community</a>
+      </li>
+      <li>
+        <a href="https:&#x2F;&#x2F;blog.fe-lang.org" class="a-active" title="Blog">Blog</a>
+      </li>
+    </ul>
+  </section>
+</header>
+
+        
+        
+    
+<main>
+    <article>
+        <div class="title">
+            
+            
+    <div class="page-header">
+        Bountiful: reloaded<span class="primary-color" style="font-size: 1.6em">.</span>
+    </div>
+
+
+            
+                <div class="meta">
+                    Posted on 2026-05-04
+
+                    
+                </div>
+            
+        </div>
+
+        
+
+        
+        
+
+        <section class="body">
+            <p>Following our public release of Fe 26.0.0 on March 31st, we are excited to share that
+we've put the new language to work in a real-world project that is now live on the
+Ethereum mainnet: bountiful, a permissionless bug bounty platform.</p>
+<p>By putting real ETH on the line, we aim to demonstrate the robustness of the Fe compiler. While the initial prizes are modest, we plan to scale them as the project and the compiler mature.</p>
+<h2 id="what-is-bountiful">What is bountiful?</h2>
+<p>If you've been following the Fe language, you may have seen a previous version
+of our bug bounty platform which <a rel="external" href="https://blog.fe-lang.org/posts/bountiful-break-things-and-get-paid/">we first launched in 2022</a>.</p>
+<p>The idea is simple: The platform hosts a series of challenges that should not be solvable. If you do solve a challenge, you have found a bug either in the compiler, the challenge contract, or the registry implementation.</p>
+<p>In any case, solving a challenge allows you to permissionlessly claim an ETH prize held in the registry contract.</p>
+<h2 id="where-do-i-start">Where do I start?</h2>
+<p>We've created a website at <a rel="external" href="https://bountiful.fe-lang.org/">bountiful.fe-lang.org</a> that serves as the main entry point to the platform. It includes a list of active challenges, instructions on how to get started and links to the code repositories, deployed contracts, and more.</p>
+<h2 id="verified-on-sourcify">Verified on Sourcify</h2>
+<p><a rel="external" href="https://sourcify.dev/">Sourcify</a> already supports Fe, and the bountiful contracts are verified there. Verification of more complex multi-file workspaces isn't fully supported yet, so we used flattened sources as a workaround for most contracts. Improving first-class workspace support is something we'd like to tackle together with the Sourcify team going forward.</p>
+<h2 id="where-do-we-go-from-here">Where do we go from here?</h2>
+<p>We are starting with a small set of challenges, but we plan to add more over time. We are also starting with small prizes of currently 0.25 ETH per challenge, but we plan to increase both the number of challenges and the prize amounts as we go.</p>
+<h2 id="office-hours">Office hours</h2>
+<p>We're currently hosting office hours every Thursday at 12PM East Coast / 6PM CEST. If you have any questions, want to talk about bountiful, or just hang out, come join us!</p>
+<p>If you want to participate, make sure to join our channel beforehand:</p>
+<ul>
+<li>💻 <a rel="external" href="https://fe-lang.zulipchat.com/#narrow/channel/594128-office-hours">fe-lang.zulipchat.com (office hours channel)</a></li>
+</ul>
+<p>If you just want to follow along, tune in here:</p>
+<ul>
+<li>📺 <a rel="external" href="http://twitch.tv/fe_lang">twitch.tv/fe_lang</a></li>
+</ul>
+<h2 id="go-break-things">Go break things!</h2>
+<p>Here's everything you need to get started:</p>
+<ul>
+<li><strong><a rel="external" href="https://fe-lang.org">fe-lang.org</a></strong></li>
+<li><strong><a rel="external" href="https://bountiful.fe-lang.org/">bountiful.fe-lang.org</a></strong></li>
+<li><strong><a rel="external" href="https://github.com/fe-lang/bountiful/blob/master/doc/bounty-hunting-guide.md">Bounty Hunting Guide</a></strong></li>
+<li><strong><a rel="external" href="https://github.com/fe-lang/bountiful">Bountiful Repository</a></strong></li>
+</ul>
+
+        </section>
+
+        
+
+    </article>
+</main>
+
+
+    </div>
+</body>
+
+</html>
