@@ -13,7 +13,7 @@ The motivating test cases for many of the optimizations are Fe ports
 of the Ethereum beacon deposit contract and the Uniswap v3 core contracts.
 Gas and bytecode size are quite a bit better than in previous releases.
 The deposit contract can be seen here: [deposit_contract.fe](https://fe-lang.org/examples/deposit-contract/).
-Gas and bytecode size comparison with the solidity implementation are below
+Gas and bytecode size comparisons with the Solidity implementation are below
 (fe -O2 vs solc --via-IR).
 
 ```text
@@ -84,8 +84,8 @@ understand from Solidity's `require`.
 
 This functionality was previously implemented in the standard library as `assert` and
 `assert_msg` functions; however, calling a normal function always evaluates its arguments
-and this lead to unnecessary gas usage on the non-error path. Making this a compiler built-in
-allows us only build the error string on error path. In rust, this would be accomplished with
+and this led to unnecessary gas usage on the non-error path. Making this a compiler built-in
+allows us to build the error string on the error path. In Rust, this would be accomplished with
 a macro; Fe doesn't (yet?) have macros.
 
 `assert!` also works in `const fn`: if an assertion fails at compile time, the compiler
@@ -224,7 +224,7 @@ arrays can be optimized as well. For example, `[10, 20, 30, 40]` indexed by `i`
 in a loop compiles to `i*10 + 10` with no const region.
 
 Sonatina will also deduplicate const data, and coalesce `CODECOPY`s of individual elements
-into larger region copies where it's benefitial.
+into larger region copies where it's beneficial.
 
 ## ABI encode/decode efficiency
 
@@ -234,14 +234,14 @@ before decoding. Many small helper functions in the implementation have been mar
 which avoids internal call overhead on hot paths. (Ideally Sonatina would inline these
 automatically; the inlining heuristics need more work.)
 
-A couple related fixes here too: encoding for payloads with multiple dynamic fields, and
-encoding of negative signed integers narrower than 256 bits was incorrect.
+A couple related fixes here too: ABI encoding for payloads with
+multiple dynamic fields, and for negative signed integers narrower than 256 bits was incorrrect.
 
 ## `#[must_use]` and fallible precompiles
 
-This release adds support for a rust-like `#[must_use]` attribute, which can be attached
+This release adds support for a Rust-like `#[must_use]` attribute, which can be attached
 to any type definition or function. If a value of a `must_use` type or the return value
-of a `must_use` function isn't used, it will result in compile-time error:
+of a `must_use` function isn't used, it will result in a compile-time error:
 
 ```text
 error[8-0082]: unused value of type `Result<PrecompileError, Option<u256>>`
@@ -263,7 +263,7 @@ Calling `.unwrap()` will revert if the `Result` is an `Err`.
 ## Standard library additions
 
 - `Option::ok_or` and `Option::ok_or_else` (mirroring Rust's API).
-  This can be combined with `Result::unwrap` to attach a a typed error to an `Option` unwrap 
+  This can be combined with `Result::unwrap` to attach a typed error to an `Option` unwrap 
   so reverts carry meaningful Solidity-compatible error data instead of `Panic(0x01)`.
 - `StorageMap` keys now support all primitive integer types (`u8`–`u128`,
   `usize`, `i8`–`i256`, `isize`) and `bool`, in addition to `u256`, `Address`,
@@ -271,7 +271,7 @@ Calling `.unwrap()` will revert if the `Result` is an `Err`.
 - `core::num` gains the `Bounded` trait (`T::min()`/`T::max()` as `const fn`),
   and the `Abs` / `UnsignedAbs` traits for signed-magnitude operations with
   explicit stances on the `T::MIN` edge case.
-- New `String<N>` utilities for concatenation, and equality in both const and runtime code.
+- New `String<N>` utilities for concatenation and equality in both const and runtime code.
 - Lossless `bool`-to-integer casts with `as` are now allowed. This is useful for hand-optimized branchless
   code.
 
