@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    
+    
+    <title>
+        Fe 26.3.0
+    </title>
+    
+
+    
+    
+
+    
+    
+        <link href=https://blog.fe-lang.org/fonts.css rel="stylesheet" />
+    
+        <!-- <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet"> -->
+
+    
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="ed2d919e-0e43-45d9-ac8a-7bed61075d36"></script>
+
+    
+    
+
+    
+    <link rel="alternate" type="application/atom+xml" title="" href="https://blog.fe-lang.org/atom.xml">
+
+    
+    
+    
+        <link rel="stylesheet" type="text/css" href="https://blog.fe-lang.org/theme/light.css"/>
+    
+
+    <link rel="stylesheet" type="text/css" media="screen" href=https://blog.fe-lang.org/main.css />
+
+
+    
+        
+            <link rel="stylesheet" href="https://blog.fe-lang.org/custom.css">
+        
+    
+</head>
+
+<body>
+    <div class="content">
+        <header>
+  <section class="nav">
+    <div>
+      <a href="https://fe-lang.org" class="no-border">
+        <img src="https:&#x2F;&#x2F;blog.fe-lang.org/fe-bare.svg" alt="Fe Programming Language">
+      </a>
+    </div>
+    <input id="menu-toggle" type="checkbox" />
+    <label class='menu-button-container' for="menu-toggle">
+      <div class='menu-button'></div>
+    </label>
+    <ul class="menu">
+      <li>
+        <a href="https://fe-lang.org/getting-started/what-is-fe/" class="a-non-active" title="Get started">Get started</a>
+      </li>
+      <li>
+        <a href="https://fe-lang.org/getting-started/key-concepts/" class="a-non-active" title="Learn">Learn</a>
+      </li>
+      <li>
+        <a href="https://fe-lang.zulipchat.com/join/dqvssgylulrmjmp2dx7vcbrq" class="a-non-active" title="Community">Community</a>
+      </li>
+      <li>
+        <a href="https:&#x2F;&#x2F;blog.fe-lang.org" class="a-active" title="Blog">Blog</a>
+      </li>
+    </ul>
+  </section>
+</header>
+
+        
+        
+    
+<main>
+    <article>
+        <div class="title">
+            
+            
+    <div class="page-header">
+        Fe 26.3.0<span class="primary-color" style="font-size: 1.6em">.</span>
+    </div>
+
+
+            
+                <div class="meta">
+                    Posted on 2026-09-16
+
+                    
+                </div>
+            
+        </div>
+
+        
+
+        
+        
+
+        <section class="body">
+            <p>The Fe team is happy to announce the release of Fe 26.3.0!</p>
+<p>This release adds first-class memory pointers, a new set of memory APIs, and
+standard library helpers for working with dynamic arrays, packed data, and
+ERC-20 tokens. It also lays the groundwork for source-level debugging, fixes an
+important contract-layout bug, and improves type inference, diagnostics, and
+compilation of large projects. Highlights are below;
+the full changelog is here: <a rel="external" href="https://github.com/argotorg/fe/releases/tag/v26.3.0">v26.3.0</a></p>
+<h2 id="first-class-memory-pointers">First-class memory pointers</h2>
+<p>Fe now has a built-in pointer type, <code>*T</code>. Pointers support dereference reads and
+writes, field access, and mutable indexing into pointer-backed arrays.</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> core</span><span style="color: #F97583;">::</span><span>ptr</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>#[test]</span></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span> pointer_example() {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    let</span><span> p</span><span style="color: #F97583;">: *</span><span>u256 </span><span style="color: #F97583;">=</span><span style="color: #B392F0;"> ptr</span><span style="color: #F97583;">::</span><span>alloc&lt;u256&gt;()</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    *</span><span>p </span><span style="color: #F97583;">=</span><span> 41</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    *</span><span>p </span><span style="color: #F97583;">+=</span><span> 1</span></span>
+<span class="giallo-l"><span>    assert</span><span style="color: #F97583;">!</span><span>(</span><span style="color: #F97583;">*</span><span>p </span><span style="color: #F97583;">==</span><span> 42)</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>This replaces the <code>MemPtr&lt;T&gt;</code> wrapper and gives the compiler a typed
+representation of memory addresses. Pointer-bearing values cannot be stored in
+persistent or transient storage, including when the pointer is nested inside
+another type.</p>
+<p>There is one related parsing change: a bare <code>*</code> at the beginning of a line is
+now interpreted as a dereference. If you split a multiplication across lines,
+keep the <code>*</code> at the end of the preceding line.</p>
+<h2 id="memory-regions-and-buffers">Memory regions and buffers</h2>
+<p>The pointer work comes with a redesign of the memory APIs used by ABI encoding,
+hashing, calls, and other EVM operations. These APIs now distinguish a read-only
+view from an owned allocation and track the extent of the memory region:</p>
+<ul>
+<li><code>MemSlice&lt;T&gt;</code> is a read-only view over typed values in memory.</li>
+<li><code>MemSpan</code> is the byte-view version, an alias for <code>MemSlice&lt;u8&gt;</code>.</li>
+<li><code>MemBuffer</code> owns an allocation and tracks its logical length and writable capacity.</li>
+<li><code>FixedMemBuffer&lt;N&gt;</code> keeps the allocation size in the type, making that size
+visible to the backend.</li>
+</ul>
+<p>For example, an operation that reads bytes can take a <code>MemSpan</code>, while code
+building a payload can use a <code>MemBuffer</code> and pass its <code>.span()</code> to the reader.</p>
+<p>This is a breaking change for code using the previous low-level memory APIs.
+<code>MemPtr&lt;T&gt;</code>, <code>core::abi::MemoryInput</code>, <code>std::evm::MemoryBytes</code>,
+<code>std::evm::mem::alloc</code>, and the cursor-based <code>AbiEncoder</code> API have been removed.
+Use <code>*T</code> for typed memory addresses, <code>MemSpan</code> for read-only byte regions, and
+<code>MemBuffer</code> for owned or writable allocations. Allocation helpers now live in
+<code>core::ptr</code>.</p>
+<p>The unused <code>core::convert::Into&lt;T&gt;</code> trait has also been removed; use explicit
+conversion APIs instead.</p>
+<h2 id="independent-layouts-for-nested-storage-maps">Independent layouts for nested storage maps</h2>
+<p>This release fixes a critical bug in the assignment of inferred contract-layout
+parameters. A type such as <code>StorageMap&lt;K, V, const SALT: u256 = _&gt;</code> asks the
+compiler to assign a salt. Previously, repeating such a type inside a struct,
+tuple, array, or other composite type could assign the same salt to distinct
+maps. A write through one map could then overwrite data belonging to another.</p>
+<p>Each structural occurrence now receives an independent inferred value. This
+also applies through type aliases, nested generic arguments, and enum payloads.
+Explicit values are reserved before inferred values are assigned, so mixing
+explicit and inferred salts cannot accidentally collide because of declaration
+order. Intentionally shared explicit values and enum overlays continue to share.</p>
+<p>The compiler also preserves these assignments as values pass through pattern
+matches, indexing, function calls, effects, and returns. Invalid or unresolved
+layouts now produce diagnostics instead of partial layouts or compiler crashes.</p>
+<h3 id="layout-information-in-the-editor">Layout information in the editor</h3>
+<p>Language-server hovers now show the contract layout in terms of source fields.
+Hovering a contract name displays its layout grouped under Storage, Transient
+Storage, and Immutable (Code); hovering a field shows just that field's entries.</p>
+<p>The display includes explicit and inferred layout parameters, source paths and
+types, and index formulas for static arrays. This makes it easier to inspect
+where nested maps and other layout-parameterized fields end up.</p>
+<h2 id="dynamic-array-access-and-memvec">Dynamic array access and <code>MemVec</code></h2>
+<p><code>DynArray&lt;T&gt;</code> now supports typed element reads with <code>.get(index)</code>. The new
+<code>std::abi::MemVec&lt;T&gt;</code> provides a mutable memory array that can be converted into
+an ABI-encodable <code>DynArray</code> for contract calls, return values, and event payloads.</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> std</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">abi</span><span style="color: #F97583;">::</span><span>{</span><span style="color: #B392F0;">DynArray</span><span>,</span><span style="color: #B392F0;"> MemVec</span><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span> make_amounts()</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> DynArray</span><span>&lt;u256&gt; {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    let mut</span><span> amounts</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> MemVec</span><span>&lt;u256&gt;</span><span style="color: #F97583;"> =</span><span style="color: #B392F0;"> MemVec</span><span style="color: #F97583;">::</span><span>zeroed(3)</span></span>
+<span class="giallo-l"><span>    amounts</span><span style="color: #F97583;">.</span><span>set(index</span><span style="color: #F97583;">:</span><span> 0, value</span><span style="color: #F97583;">:</span><span> 100)</span></span>
+<span class="giallo-l"><span>    amounts</span><span style="color: #F97583;">.</span><span>set(index</span><span style="color: #F97583;">:</span><span> 1, value</span><span style="color: #F97583;">:</span><span> 200)</span></span>
+<span class="giallo-l"><span>    amounts</span><span style="color: #F97583;">.</span><span>set(index</span><span style="color: #F97583;">:</span><span> 2, value</span><span style="color: #F97583;">:</span><span> 300)</span></span>
+<span class="giallo-l"><span>    amounts</span><span style="color: #F97583;">.</span><span>to_dyn_array()</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>#[test]</span></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span> array_example() {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    let</span><span> amounts </span><span style="color: #F97583;">=</span><span> make_amounts()</span></span>
+<span class="giallo-l"><span>    assert</span><span style="color: #F97583;">!</span><span>(amounts</span><span style="color: #F97583;">.</span><span>get(1)</span><span style="color: #F97583;"> ==</span><span> 200)</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>The length of a <code>MemVec</code> is chosen at creation and remains fixed; it does not
+have a <code>push</code> operation. <code>MemVec::from_dyn_array</code> creates an independent mutable
+copy of an existing array, and <code>.to_dyn_array()</code> creates an independent snapshot,
+so later writes to the builder do not change the encoded result.</p>
+<p>Element types must occupy one static ABI word, including integers, <code>Address</code>,
+<code>bool</code>, and fixed-byte types. Reads follow Solidity ABI decoding rules, and
+out-of-bounds reads or writes revert with <code>Panic(0x32)</code>.</p>
+<h3 id="dynamic-arrays-in-events">Dynamic arrays in events</h3>
+<p>Non-indexed dynamic array event fields now produce the correct Solidity event
+signatures, including when their types use imported aliases or contain fixed-size
+arrays. For example, a <code>ValuesChanged</code> event with a <code>DynArray&lt;u256&gt;</code> field gets
+the canonical signature <code>ValuesChanged(uint256[])</code>. Previously, evaluating the
+generated <code>TOPIC0</code> for these fields could crash the compiler.</p>
+<p>Indexed dynamic fields remain unsupported and now receive a targeted diagnostic.
+Failures when evaluating generated event constants also produce diagnostics.</p>
+<h2 id="array-and-tuple-equality">Array and tuple equality</h2>
+<p>Fixed-size arrays and tuples now support <code>==</code> and <code>!=</code> when their element types
+implement <code>Eq</code>. Arrays compare element by element, and tuples support up to six
+elements, including the empty tuple <code>()</code>.</p>
+<p>Comparisons use each element's <code>Eq</code> implementation and stop at the first
+mismatch. This also works for nested arrays and tuples, and for custom element
+types without requiring them to implement <code>Copy</code>.</p>
+<h2 id="packed-encoding-and-eip-712-digests">Packed encoding and EIP-712 digests</h2>
+<p><code>std::evm::packed</code> adds tightly packed encoding for integers, addresses,
+booleans, strings, and byte sequences. Values are concatenated without ABI word
+padding or length prefixes: a <code>u16</code> contributes two bytes and an <code>Address</code>
+contributes twenty.</p>
+<p>Use <code>encode_packed</code> to build a payload from a tuple, or <code>keccak_packed</code> when you
+only need its hash. For example, hashing a pair of token addresses for a CREATE2
+salt:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> std</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">evm</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">RawMem</span></span>
+<span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> std</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">evm</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">packed</span><span style="color: #F97583;">::</span><span>keccak_packed</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span> pair_salt(token0</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Address</span><span>, token1</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Address</span><span>)</span><span style="color: #F97583;"> -&gt;</span><span> u256 uses (mem</span><span style="color: #F97583;">: mut</span><span style="color: #B392F0;"> RawMem</span><span>) {</span></span>
+<span class="giallo-l"><span>    keccak_packed((token0, token1))</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>A growable <code>Packed</code> builder supports payloads assembled at runtime, with append
+methods for individual value types. The module follows Solidity's
+<code>abi.encodePacked</code> encoding for the supported types; non-byte arrays are not
+supported.</p>
+<p><code>std::evm::crypto::eip712_digest(domain_separator: ..., struct_hash: ...)</code> also
+provides a helper for hashing the EIP-712 prefix, domain separator, and struct
+hash into the final digest.</p>
+<h2 id="erc-20-transfers-and-external-calls">ERC-20 transfers and external calls</h2>
+<p>Some ERC-20 tokens return <code>true</code> from a successful transfer, while others return
+no data. The new <code>std::evm::erc20</code> helpers handle both conventions:</p>
+<ul>
+<li><code>safe_transfer</code></li>
+<li><code>safe_transfer_from</code></li>
+<li><code>safe_approve</code></li>
+</ul>
+<p>They reject <code>false</code> returns and targets without code, and propagate revert data
+from the token. <code>safe_approve</code> does not reset an existing allowance to zero;
+callers interacting with a token that requires this must do so explicitly.</p>
+<p>The underlying <code>Call::call_with_default</code> and <code>Address::call_with_default</code> APIs
+are available for other protocols with optional return data. A successful call
+with empty returndata produces the supplied default; non-empty returndata is
+still decoded strictly. Unlike the ERC-20 helpers, the general helper also
+returns the default for a successful call to an address without code.</p>
+<p>Two more additions make external calls easier:</p>
+<ul>
+<li><code>Address::static</code> performs a typed <code>STATICCALL</code>, forwards the available gas,
+and propagates the callee's revert data on failure.</li>
+<li><code>std::evm::encode_msg_calldata</code> encodes a message selector and its arguments
+into memory for use with low-level calls.</li>
+</ul>
+<h2 id="rebuilding-from-contract-metadata">Rebuilding from contract metadata</h2>
+<p>Fe 26.2 added Solidity-standard contract metadata. Fe 26.3 adds the other side
+of that workflow:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #B392F0;">fe</span><span style="color: #9ECBFF;"> build</span><span style="color: #79B8FF;"> --from-metadata</span><span style="color: #9ECBFF;"> out/Token.metadata.json</span></span></code></pre>
+<p>The compiler reconstructs the recorded project in a temporary directory and
+builds the contract selected by <code>settings.compilationTarget</code>, using the optimizer
+level recorded in the metadata. The JSON can also be read from stdin with
+<code>--from-metadata -</code>. Artifacts go to <code>--out-dir</code>, defaulting to <code>./out</code>.</p>
+<p>This gives source verifiers and external toolchains a way to rebuild a contract
+from one self-contained JSON document. <code>--contract</code> can override the selected
+contract, and an explicit <code>-O</code> overrides the recorded optimizer setting with a
+warning. A compiler version mismatch also warns rather than stopping the build;
+matching the original bytecode still requires the original compiler and settings.</p>
+<h2 id="foundations-for-source-level-debugging">Foundations for source-level debugging</h2>
+<p>Fe 26.3 introduces compiler infrastructure for connecting emitted EVM bytecode
+back to Fe source code, along with an experimental ethdebug export. This is
+foundational work toward source-level debugging; the end-user workflow is still
+being developed.</p>
+<p>The compiler tracks source attribution through MIR and the Sonatina backend to
+individual bytecode instructions at their actual program-counter offsets, for
+both contract creation and runtime code. Instructions are classified as
+source-mapped, ambiguous, synthetic, or unmapped. Source context is attached only
+when the recorded compiler facts establish a unique exact mapping, so gaps and
+ambiguities remain visible. Coverage is partial: these mappings do not capture
+every contributing source expression or the full history of optimizations.</p>
+<p>The new <code>fe dev trace emit</code> command compiles a Fe file or ingot and writes these
+compiler facts as a validated JSONL stream. <code>fe dev debug emit --format ethdebug</code>
+then exports an instruction/source view from that stream, prints an attribution
+summary, and can write additional origin and confidence details for tooling
+experiments.</p>
+<p>For now, the export uses a Fe-specific experimental schema. Compatibility with
+existing ethdebug consumers has not been established, and the formats and
+commands are not stable public APIs. Variable locations are not yet available,
+and trace generation is separate from ordinary build and test execution, so the
+output is not yet tied to the exact artifact executed by a failing test. Further
+integration and tooling work is needed to turn this into a polished debugging
+experience.</p>
+<h2 id="type-inference-and-diagnostics">Type inference and diagnostics</h2>
+<p>Trait bounds on generic calls are now solved at the call site before the return
+type is checked against its context. This fixes cases such as <code>Option::map</code>
+where using the result later in the same function previously required a redundant
+type annotation. Method selection also handles associated-type projection bounds
+and competing blanket implementations more reliably.</p>
+<p>Internally, trait resolution now uses <code>tablesolve</code>, and pattern coverage checking
+uses <code>matchcov</code>. The latter catches previously missed unreachable match arms,
+allows empty matches over empty enums, and reports a representative missing case
+when a match is not exhaustive.</p>
+<p>Message declarations now check that <code>sol("...")</code> selector signatures match their
+fields in both argument count and ABI types, even when the build does not emit
+ABI JSON. Errors point at the declaration or offending field and suggest the
+corresponding standard-library type where possible.</p>
+<p>Several cases that previously crashed the compiler now produce diagnostics or
+compile correctly, including unsupported macro calls, events with many fields,
+and short string literals inside aggregate constants. Mutable owned arrays,
+structs, and enums also compile correctly in cases that previously produced
+internal carrier-mismatch errors. A <code>recv</code> block that names a file module
+instead of a message module now reports a diagnostic explaining what is expected,
+rather than crashing the compiler.</p>
+<p>Indexing an empty array nested inside another array, tuple, struct, or enum
+variant now performs the expected bounds-check revert instead of crashing the
+compiler.</p>
+<h2 id="compilation-and-standard-library-improvements">Compilation and standard library improvements</h2>
+<p>Functions are now deduplicated in MIR after monomorphization, reducing compile
+time for large projects. Runtime layouts are also deduplicated structurally, and
+library modules no longer produce duplicate ingot main objects when building
+projects with dependencies.</p>
+<p>The Sonatina backend now supports functions and <code>recv</code> arms with more than
+16 arguments, removing a compilation limitation for contracts with large
+message signatures and internal calls with many parameters.</p>
+<p>A few more improvements worth calling out:</p>
+<ul>
+<li><code>core::num::isqrt</code> computes the integer square root of a <code>u256</code>, rounded down,
+using a fixed number of Newton iterations.</li>
+<li><code>StorageBytes::to_memory</code> copies stored bytes into memory without ending the
+contract call, allowing further processing such as hashing or deployment.
+<code>StorageBytes::word_at</code> reads individual payload words.</li>
+<li>Solidity integer wrapper types now support wrapping arithmetic operations.</li>
+<li><code>usize</code> now implements the missing shift and bitwise assignment operators:
+<code>&lt;&lt;=</code>, <code>&gt;&gt;=</code>, <code>&amp;=</code>, <code>|=</code>, and <code>^=</code>.</li>
+<li>Runtime ABI argument-size validation has been aligned with Solidity.</li>
+<li>Clean builds no longer depend on Tree-sitter parser generation order, and the
+bundled grammar handles chained <code>||</code> conditions consistently with the compiler.</li>
+</ul>
+<h2 id="try-it">Try it!</h2>
+<p>Fe 26.3.0 is available now for Linux, macOS, and Windows. Let us know what you
+think!</p>
+<ul>
+<li><strong><a rel="external" href="https://fe-lang.org">fe-lang.org</a></strong></li>
+<li><strong><a rel="external" href="https://fe-lang.org/getting-started/first-contract/">Write your first contract</a></strong>: Get hands-on in minutes</li>
+<li><strong><a rel="external" href="https://fe-lang.zulipchat.com">Zulip</a></strong>: Join the conversation</li>
+</ul>
+
+        </section>
+
+        
+
+    </article>
+</main>
+
+
+    </div>
+</body>
+
+</html>
