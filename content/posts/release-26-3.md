@@ -1,20 +1,15 @@
 +++
 title = "Fe 26.3.0"
-date = "2026-09-14" # Draft date; replace with the release date before publishing.
-draft = true
+date = "2026-09-16"
 +++
-
-<!-- Editorial note: release-day copy, based on argotorg/fe master at
-62e6922d4897bb84d52b105221fbda5f17954707 (2026-09-13), compared with v26.2.0.
-Confirm the release tag and platform artifacts, set the date, and remove draft
-status before publishing. -->
 
 The Fe team is happy to announce the release of Fe 26.3.0!
 
 This release adds first-class memory pointers, a new set of memory APIs, and
 standard library helpers for working with dynamic arrays, packed data, and
-ERC-20 tokens. It also fixes an important contract-layout bug and improves type
-inference, diagnostics, and compilation of large projects. Highlights are below;
+ERC-20 tokens. It also lays the groundwork for source-level debugging, fixes an
+important contract-layout bug, and improves type inference, diagnostics, and
+compilation of large projects. Highlights are below;
 the full changelog is here: [v26.3.0](https://github.com/argotorg/fe/releases/tag/v26.3.0)
 
 ## First-class memory pointers
@@ -129,6 +124,27 @@ Element types must occupy one static ABI word, including integers, `Address`,
 `bool`, and fixed-byte types. Reads follow Solidity ABI decoding rules, and
 out-of-bounds reads or writes revert with `Panic(0x32)`.
 
+### Dynamic arrays in events
+
+Non-indexed dynamic array event fields now produce the correct Solidity event
+signatures, including when their types use imported aliases or contain fixed-size
+arrays. For example, a `ValuesChanged` event with a `DynArray<u256>` field gets
+the canonical signature `ValuesChanged(uint256[])`. Previously, evaluating the
+generated `TOPIC0` for these fields could crash the compiler.
+
+Indexed dynamic fields remain unsupported and now receive a targeted diagnostic.
+Failures when evaluating generated event constants also produce diagnostics.
+
+## Array and tuple equality
+
+Fixed-size arrays and tuples now support `==` and `!=` when their element types
+implement `Eq`. Arrays compare element by element, and tuples support up to six
+elements, including the empty tuple `()`.
+
+Comparisons use each element's `Eq` implementation and stop at the first
+mismatch. This also works for nested arrays and tuples, and for custom element
+types without requiring them to implement `Copy`.
+
 ## Packed encoding and EIP-712 digests
 
 `std::evm::packed` adds tightly packed encoding for integers, addresses,
@@ -204,6 +220,35 @@ contract, and an explicit `-O` overrides the recorded optimizer setting with a
 warning. A compiler version mismatch also warns rather than stopping the build;
 matching the original bytecode still requires the original compiler and settings.
 
+## Foundations for source-level debugging
+
+Fe 26.3 introduces compiler infrastructure for connecting emitted EVM bytecode
+back to Fe source code, along with an experimental ethdebug export. This is
+foundational work toward source-level debugging; the end-user workflow is still
+being developed.
+
+The compiler tracks source attribution through MIR and the Sonatina backend to
+individual bytecode instructions at their actual program-counter offsets, for
+both contract creation and runtime code. Instructions are classified as
+source-mapped, ambiguous, synthetic, or unmapped. Source context is attached only
+when the recorded compiler facts establish a unique exact mapping, so gaps and
+ambiguities remain visible. Coverage is partial: these mappings do not capture
+every contributing source expression or the full history of optimizations.
+
+The new `fe dev trace emit` command compiles a Fe file or ingot and writes these
+compiler facts as a validated JSONL stream. `fe dev debug emit --format ethdebug`
+then exports an instruction/source view from that stream, prints an attribution
+summary, and can write additional origin and confidence details for tooling
+experiments.
+
+For now, the export uses a Fe-specific experimental schema. Compatibility with
+existing ethdebug consumers has not been established, and the formats and
+commands are not stable public APIs. Variable locations are not yet available,
+and trace generation is separate from ordinary build and test execution, so the
+output is not yet tied to the exact artifact executed by a failing test. Further
+integration and tooling work is needed to turn this into a polished debugging
+experience.
+
 ## Type inference and diagnostics
 
 Trait bounds on generic calls are now solved at the call site before the return
@@ -226,7 +271,13 @@ Several cases that previously crashed the compiler now produce diagnostics or
 compile correctly, including unsupported macro calls, events with many fields,
 and short string literals inside aggregate constants. Mutable owned arrays,
 structs, and enums also compile correctly in cases that previously produced
-internal carrier-mismatch errors.
+internal carrier-mismatch errors. A `recv` block that names a file module
+instead of a message module now reports a diagnostic explaining what is expected,
+rather than crashing the compiler.
+
+Indexing an empty array nested inside another array, tuple, struct, or enum
+variant now performs the expected bounds-check revert instead of crashing the
+compiler.
 
 ## Compilation and standard library improvements
 
@@ -234,6 +285,10 @@ Functions are now deduplicated in MIR after monomorphization, reducing compile
 time for large projects. Runtime layouts are also deduplicated structurally, and
 library modules no longer produce duplicate ingot main objects when building
 projects with dependencies.
+
+The Sonatina backend now supports functions and `recv` arms with more than
+16 arguments, removing a compilation limitation for contracts with large
+message signatures and internal calls with many parameters.
 
 A few more improvements worth calling out:
 
@@ -243,6 +298,8 @@ A few more improvements worth calling out:
   contract call, allowing further processing such as hashing or deployment.
   `StorageBytes::word_at` reads individual payload words.
 - Solidity integer wrapper types now support wrapping arithmetic operations.
+- `usize` now implements the missing shift and bitwise assignment operators:
+  `<<=`, `>>=`, `&=`, `|=`, and `^=`.
 - Runtime ABI argument-size validation has been aligned with Solidity.
 - Clean builds no longer depend on Tree-sitter parser generation order, and the
   bundled grammar handles chained `||` conditions consistently with the compiler.
