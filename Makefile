@@ -31,3 +31,10 @@ deploy: build
 		# Delete temporary branches
 		git branch -D gh-pages-tmp
 		git branch -D gh-pages-dist
+
+# Social visuals (see tools/social/README.md). Override PYTHON to use a venv.
+PYTHON ?= python3
+CAMPAIGN ?= social/release-26-3/campaign.json
+.PHONY: social
+social:
+	$(PYTHON) tools/social/render.py $(CAMPAIGN)

@@ -21,6 +21,19 @@ Run zola `zola serve`
 ## How to deploy
 
 Run `make deploy`
+
+## Social visuals
+
+Generate tweet-thread cards from editable campaign data:
+
+```sh
+make social
+```
+
+See [the social tooling guide](tools/social/README.md) for setup, previews,
+and creating a new campaign. The [Fe 26.3 thread draft](social/release-26-3/thread-draft.md)
+contains the original tweet copy and visual ideas.
+
 ## Community
 
 - Twitter: [@official_fe](https://twitter.com/official_fe)

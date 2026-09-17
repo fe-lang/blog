@@ -1,0 +1,312 @@
+{
+  "series": "Fe 26.3",
+  "footer": "fe-lang.org  /  RELEASE 26.3",
+  "cards": [
+    {
+      "id": "release",
+      "layout": "cover",
+      "title": "Fe 26.3 is here",
+      "headline": [
+        "Fe 26.3",
+        "is here."
+      ],
+      "description": "More expressive contracts.\nBetter tools to build them.",
+      "chips": [
+        "Memory",
+        "Interoperability",
+        "Debugging foundations"
+      ],
+      "alt": "Fe 26.3 is here. A violet gradient release card with the Fe logo and the themes Memory, Interoperability, and Debugging foundations.",
+      "tweet": "Fe 26.3 is here!\n\nFirst-class memory pointers, new array and ERC-20 helpers, important compiler fixes, and foundations for source-level debugging.\n\nHere's what's new ->"
+    },
+    {
+      "id": "pointers",
+      "layout": "code",
+      "title": "Memory gets a type.",
+      "subtitle": "First-class pointers: *T",
+      "code": "use core::ptr\n\nlet p: *u256 = ptr::alloc<u256>()\n*p = 41\n*p += 1\nassert!(*p == 42)",
+      "aside": [
+        {
+          "label": "Allocate",
+          "text": "Typed memory"
+        },
+        {
+          "label": "Dereference",
+          "text": "Read and write"
+        },
+        {
+          "label": "Keep local",
+          "text": "No storage escape"
+        }
+      ],
+      "note": "Pointers also support field access and mutable array indexing.",
+      "alt": "Fe code allocates a u256 pointer, writes 41, increments it, and checks that it reads 42. Side labels explain allocation, dereference, and prevention of storage escape.",
+      "tweet": "Fe now has first-class memory pointers: *T.\n\nAllocate typed memory, read and write through dereferences, access fields, and index pointer-backed arrays.\n\nThe compiler also prevents pointer-bearing values from escaping into persistent or transient storage."
+    },
+    {
+      "id": "memory-regions",
+      "layout": "regions",
+      "title": "Views, length, capacity.",
+      "subtitle": "Explicit memory regions for ABI and EVM operations.",
+      "note": "MemSlice<T>: typed views. FixedMemBuffer<N>: fixed-size owned allocation.",
+      "alt": "A MemBuffer allocation has ten blocks, with six marked as bytes in use. Length spans the used bytes; capacity spans the full allocation. MemSpan provides a read-only byte view. The previous low-level memory API is replaced.",
+      "tweet": "Memory APIs now distinguish read-only views from owned allocations:\n\n- MemSlice<T> / MemSpan: read-only views\n- MemBuffer: owned memory with length and capacity\n- FixedMemBuffer<N>: fixed-size allocation\n\nThis replaces the previous low-level memory API."
+    },
+    {
+      "id": "storage-layouts",
+      "layout": "lanes",
+      "title": "Separate maps. Separate salts.",
+      "subtitle": "Independent inferred layout values for nested storage maps.",
+      "rows": [
+        {
+          "label": "MAP A",
+          "left": "store.balances",
+          "right": "inferred salt A"
+        },
+        {
+          "label": "MAP B",
+          "left": "store.allowances",
+          "right": "inferred salt B"
+        }
+      ],
+      "caption": "Repeated types no longer accidentally share inferred salts.",
+      "note": "Contract and field hovers now expose the assigned layout.",
+      "alt": "Two independent lanes connect store.balances to inferred salt A and store.allowances to inferred salt B. Distinct nested maps no longer accidentally share inferred salts; editor hovers expose the layout.",
+      "tweet": "An important correctness fix: nested storage maps now receive independent inferred layout values.\n\nPreviously, distinct maps could accidentally share a salt and overwrite each other's data.\n\nEditor hovers now also show layouts grouped by storage, transient storage, and code."
+    },
+    {
+      "id": "dynamic-arrays",
+      "layout": "code",
+      "title": "Build an ABI array in memory.",
+      "subtitle": "MemVec<T> + DynArray<T>",
+      "code": "let mut v: MemVec<u256> =\n    MemVec::zeroed(3)\nv.set(index: 0, value: 100)\nv.set(index: 1, value: 200)\nv.set(index: 2, value: 300)\nlet values = v.to_dyn_array()",
+      "aside": [
+        {
+          "label": "Create",
+          "text": "Choose the length"
+        },
+        {
+          "label": "Mutate",
+          "text": "Indexed writes"
+        },
+        {
+          "label": "Snapshot",
+          "text": "Independent ABI array"
+        }
+      ],
+      "note": "Length stays fixed. DynArray<T>.get(index) provides typed element reads.",
+      "alt": "Fe code creates a three-element MemVec of u256, writes 100, 200, and 300, then creates an independent DynArray snapshot. Length is fixed at creation; DynArray.get reads typed elements.",
+      "tweet": "Working with ABI arrays is easier:\n\n- DynArray<T>.get(index) reads typed elements\n- MemVec<T> provides mutable memory arrays\n- .to_dyn_array() creates an independent ABI-encodable snapshot\n\nMemVec's length is set at creation; it does not grow."
+    },
+    {
+      "id": "equality",
+      "layout": "code",
+      "title": "Compare the whole collection.",
+      "subtitle": "== and != for fixed-size arrays and tuples.",
+      "code": "let a: [u256; 3] = [1, 2, 3]\nassert!(a == [1, 2, 3])\n\nlet pair: (u256, bool) = (7, true)\nassert!(pair != (7, false))",
+      "aside": [
+        {
+          "label": "Element-wise",
+          "text": "Uses each element's Eq"
+        },
+        {
+          "label": "Short-circuit",
+          "text": "Stops at a mismatch"
+        },
+        {
+          "label": "Nested types",
+          "text": "No Copy requirement"
+        }
+      ],
+      "note": "Tuples support zero through six elements; array elements must implement Eq.",
+      "alt": "Code compares a u256 array with an equal array and compares the tuple (7, true) with (7, false). Equality uses element Eq implementations, short-circuits, and supports nesting without requiring Copy. Tuples support up to six elements.",
+      "tweet": "Arrays and tuples now support == and != when their elements implement Eq.\n\nComparisons work recursively, respect custom equality, and stop at the first mismatch.\n\nFixed-size arrays and tuples of up to six elements are supported, including the empty tuple."
+    },
+    {
+      "id": "event-signatures",
+      "layout": "code",
+      "title": "Dynamic arrays in events.",
+      "subtitle": "Fixed Solidity signatures for non-indexed dynamic array fields.",
+      "code": "#[event]\nstruct ValuesChanged {\n    values: DynArray<u256>,\n}\n\n// ValuesChanged(uint256[])",
+      "aside": [
+        {
+          "label": "Signature",
+          "text": "Canonical ABI names"
+        },
+        {
+          "label": "TOPIC0",
+          "text": "keccak256(signature)"
+        },
+        {
+          "label": "Nested types",
+          "text": "Aliases and arrays"
+        }
+      ],
+      "note": "Indexed dynamic fields remain unsupported and receive a targeted diagnostic.",
+      "alt": "An event struct ValuesChanged with a DynArray<u256> field resolves to ValuesChanged(uint256[]). TOPIC0 is the keccak256 hash of that signature. Indexed dynamic fields remain unsupported.",
+      "tweet": "Dynamic array event fields now produce correct Solidity signatures.\n\nA ValuesChanged event containing DynArray<u256> gets the signature:\n\nValuesChanged(uint256[])\n\nAliases and nested array types work too. Indexed dynamic fields remain unsupported."
+    },
+    {
+      "id": "packed-encoding",
+      "layout": "packed",
+      "title": "Packed bytes. Direct hashes.",
+      "subtitle": "No word padding. No length prefixes.",
+      "note": "Also new: a growable Packed builder and crypto::eip712_digest.",
+      "alt": "Packed encoding concatenates a u16 as two bytes, an Address as twenty bytes, and a bool as one byte. Labelled blocks are schematic, not to scale. keccak_packed hashes the same bytes directly, without ABI word padding or length prefixes.",
+      "tweet": "New packed encoding helpers:\n\n- encode_packed builds byte payloads\n- keccak_packed hashes them directly\n- Packed builds payloads incrementally\n\nThere's also eip712_digest(domain_separator: ..., struct_hash: ...) for the final EIP-712 digest."
+    },
+    {
+      "id": "erc20",
+      "layout": "outcomes",
+      "title": "One API. Both token conventions.",
+      "subtitle": "safe_transfer / safe_transfer_from / safe_approve",
+      "rows": [
+        {
+          "input": "Returns true",
+          "result": "Accept",
+          "ok": true
+        },
+        {
+          "input": "Empty return + contract code",
+          "result": "Accept",
+          "ok": true
+        },
+        {
+          "input": "Returns false",
+          "result": "Revert",
+          "ok": false
+        },
+        {
+          "input": "Target has no code",
+          "result": "Revert",
+          "ok": false
+        }
+      ],
+      "note": "Token reverts propagate. safe_approve does not automatically reset allowances.",
+      "alt": "ERC-20 helper outcomes: true is accepted; empty return data from an address with contract code is accepted; false and targets without code revert. Token revert data propagates. safe_approve does not reset allowances automatically.",
+      "tweet": "ERC-20 tokens don't all return data the same way.\n\nNew safe_transfer, safe_transfer_from, and safe_approve helpers accept true or empty returndata, reject false and targets without code, and propagate token reverts."
+    },
+    {
+      "id": "external-calls",
+      "layout": "flow",
+      "title": "Messages become calls.",
+      "subtitle": "Typed STATICCALLs and calldata helpers.",
+      "steps": [
+        {
+          "label": "Fe message",
+          "text": "Selector + fields"
+        },
+        {
+          "label": "Calldata",
+          "text": "Encode arguments"
+        },
+        {
+          "label": "Contract",
+          "text": "CALL / STATICCALL"
+        },
+        {
+          "label": "Returndata",
+          "text": "Decode result"
+        }
+      ],
+      "caption": "Address::static  /  encode_msg_calldata  /  call_with_default",
+      "note": "call_with_default uses the default only for successful calls with empty returndata.",
+      "alt": "A four-step diagram shows a Fe message encoded as calldata, sent to a contract with CALL or STATICCALL, then decoded from returndata. Address.static, encode_msg_calldata, and call_with_default support the workflow.",
+      "tweet": "More tools for external calls:\n\n- Address::static makes typed STATICCALLs\n- encode_msg_calldata prepares selector + arguments\n- call_with_default handles successful calls with empty returndata\n\nNon-empty returndata is still decoded strictly."
+    },
+    {
+      "id": "metadata",
+      "layout": "flow",
+      "title": "Rebuild from one JSON file.",
+      "subtitle": "fe build --from-metadata out/Token.metadata.json",
+      "steps": [
+        {
+          "label": "Metadata",
+          "text": "Sources + settings"
+        },
+        {
+          "label": "Fe compiler",
+          "text": "Rebuild the project"
+        },
+        {
+          "label": "Bytecode",
+          "text": "Output artifacts"
+        }
+      ],
+      "caption": "A building block for verification and external toolchains.",
+      "note": "Matching original bytecode requires the original compiler and settings.",
+      "alt": "Metadata containing sources and settings goes through the Fe compiler to produce bytecode. Command: fe build --from-metadata out/Token.metadata.json. Exact reproduction requires matching the original compiler and settings.",
+      "tweet": "Fe 26.2 added contract metadata. Fe 26.3 adds rebuilding from it:\n\nfe build --from-metadata out/Token.metadata.json\n\nThe compiler reconstructs the project and uses its recorded settings - a building block for source verification and external tooling."
+    },
+    {
+      "id": "debugging",
+      "layout": "flow",
+      "title": "Debugging starts here.",
+      "subtitle": "Experimental foundations for bytecode-to-source attribution.",
+      "steps": [
+        {
+          "label": "Fe source",
+          "text": "Source spans"
+        },
+        {
+          "label": "MIR",
+          "text": "Compiler facts"
+        },
+        {
+          "label": "Sonatina",
+          "text": "Backend attribution"
+        },
+        {
+          "label": "EVM + PC",
+          "text": "Emitted instructions"
+        }
+      ],
+      "caption": "Developer trace commands + a Fe-specific ethdebug export.",
+      "note": "Partial coverage. Unstable APIs. Stock ethdebug compatibility is not established.",
+      "alt": "A conceptual attribution pipeline links Fe source, MIR compiler facts, the Sonatina backend, and emitted EVM instructions at program-counter offsets. The Fe-specific ethdebug export is experimental: coverage is partial, APIs are unstable, and compatibility with stock ethdebug consumers is not established.",
+      "tweet": "Source-level debugging foundations are landing.\n\nNew developer commands track bytecode-to-source attribution and export an experimental Fe-specific ethdebug view.\n\nCoverage is partial, APIs are unstable, and compatibility with existing ethdebug tools is not yet established."
+    },
+    {
+      "id": "compiler",
+      "layout": "tiles",
+      "title": "A smoother compile cycle.",
+      "subtitle": "Fewer surprises when contracts get more complex.",
+      "items": [
+        {
+          "label": "TYPE INFERENCE",
+          "text": "Better trait resolution\nand match diagnostics"
+        },
+        {
+          "label": "WIDE CALLS",
+          "text": "More than 16 arguments\nin functions and recv arms"
+        },
+        {
+          "label": "COMPILE TIME",
+          "text": "Function deduplication\nafter monomorphization"
+        },
+        {
+          "label": "DIAGNOSTICS",
+          "text": "Useful errors in cases\nthat previously crashed"
+        }
+      ],
+      "alt": "Four compiler improvements: better trait inference and match diagnostics; functions and recv arms with more than sixteen arguments; function deduplication after monomorphization; and useful diagnostics instead of compiler crashes.",
+      "tweet": "Compiler improvements include:\n\n- Better trait inference and match diagnostics\n- Support for functions and recv arms with >16 arguments\n- Function deduplication to reduce compile time\n- More useful errors where the compiler previously crashed"
+    },
+    {
+      "id": "read-more",
+      "layout": "cover",
+      "title": "Explore Fe 26.3",
+      "headline": [
+        "Build",
+        "with Fe."
+      ],
+      "description": "Read the full Fe 26.3 announcement\nand memory API migration notes.",
+      "chips": [
+        "fe-lang.org",
+        "blog.fe-lang.org/posts/release-26-3/"
+      ],
+      "alt": "Build with Fe. Read the full Fe 26.3 announcement and memory API migration notes at blog.fe-lang.org/posts/release-26-3/. Fe logo on a violet gradient.",
+      "tweet": "There's more: integer square roots, new StorageBytes reads, wrapping arithmetic for Solidity integer types, and missing usize assignment operators.\n\nRead the full announcement, including migration notes for the memory APIs:\n\nhttps://blog.fe-lang.org/posts/release-26-3/"
+    }
+  ]
+}
