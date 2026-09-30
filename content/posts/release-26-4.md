@@ -123,6 +123,34 @@ storage representation for dynamic bytes and strings. `std::evm::SolMapping`
 derives Solidity-compatible mapping slots from a runtime root, including nested
 mappings. These APIs let code work with an existing Solidity layout directly.
 
+For example, a pool layout can pack an address, fee, and tick spacing into
+one slot. Each write specifies the field's byte offset:
+
+```rust
+use std::abi::sol::{Int24, Uint24}
+use std::evm::{Evm, RawStorage, SolSlot}
+
+#[test]
+fn packed_pool_parameters() uses (evm: mut Evm) {
+    with (RawStorage = evm) {
+        // Solidity: address currency; uint24 fee; int24 tickSpacing;
+        let slot = SolSlot::at(7)
+        slot.write(offset: 0, value: Address { inner: 0xabc })
+        slot.write(offset: 20, value: Uint24 { val: 3000 })
+        slot.write(offset: 23, value: Int24 { val: 60 })
+
+        // Updating the fee leaves the neighbouring fields intact.
+        slot.write(offset: 20, value: Uint24 { val: 500 })
+        let currency: Address = slot.read(offset: 0)
+        let fee: Uint24 = slot.read(offset: 20)
+        let spacing: Int24 = slot.read(offset: 23)
+        assert!(currency.inner == 0xabc)
+        assert!(fee.val == 500)
+        assert!(spacing.val == 60)
+    }
+}
+```
+
 ### Custom storage keys
 
 `StorageMap` now reserves its complete hashing buffer before calling a custom
@@ -153,6 +181,23 @@ Fe 26.3 added ERC-20 helpers that revert on failure. This release adds
 non-reverting helpers that return a classified `TokenCall` outcome: `Ok`,
 `Reverted`, `BadReturn`, or `NoCode`. Callers can inspect the result and raise
 their own errors.
+
+For example, a transfer helper can turn each failure category into a distinct
+application error. Here we use revert messages to keep the example small:
+
+```rust
+use std::evm::{Call, Ctx, TokenCall, erc20}
+
+fn transfer_or_revert(token: Address, receiver: Address, amount: u256)
+uses (call: mut Call, ctx: Ctx) {
+    match erc20::try_transfer(token, receiver, amount) {
+        TokenCall::Ok => {},
+        TokenCall::Reverted => assert!(false, "Token transfer reverted"),
+        TokenCall::BadReturn => assert!(false, "Token returned failure"),
+        TokenCall::NoCode => assert!(false, "Token address has no code"),
+    }
+}
+```
 
 The new helpers cover:
 
@@ -213,6 +258,33 @@ For Merkle proofs, `std::evm::merkle` supports both OpenZeppelin-compatible
 sorted-pair trees and positional proofs, such as those used in Seaport bulk
 order signatures. Proofs are read in place from a `MemSlice<u256>` or a decoded
 `DynArray<Bytes32>` / `DynArray<u256>`.
+
+For an allowlist or airdrop, the verification step takes a proof, a trusted
+root, and the leaf hash. This small test builds a two-leaf tree and checks both
+a valid leaf and one that is not in the tree:
+
+```rust
+use std::abi::MemVec
+use std::evm::{keccak_words, merkle}
+
+#[test]
+fn verify_two_leaf_tree() {
+    let leaf = keccak_words([1])
+    let sibling = keccak_words([2])
+    let root = merkle::hash_pair_sorted(leaf, sibling)
+
+    let mut proof: MemVec<u256> = MemVec::zeroed(1)
+    proof.set(index: 0, value: sibling)
+    let proof = proof.to_dyn_array()
+
+    assert!(merkle::verify(proof, root, leaf))
+    assert!(!merkle::verify(proof, root, leaf: keccak_words([3])))
+}
+```
+
+In a contract, the root would come from the application's trusted state and the
+leaf would be derived from the claim using the same encoding as the tree builder.
+The proof can be passed directly as a decoded ABI array.
 
 ## Text formatting and hashing
 
