@@ -1,16 +1,41 @@
 +++
-title = "Fe 26.4.0"
+title = "Fe 26.4 — updated for 26.4.1"
 date = "2026-09-30"
 +++
 
-The Fe team is happy to announce the release of Fe 26.4.0!
+> **Update (2026-09-30): Fe 26.4.1 supersedes 26.4.0.**
+> Shortly after releasing 26.4.0, we found that the borrow checker incorrectly
+> rejected a common contract pattern: calling a mutable method on a contract
+> field whose struct contains a `StorageMap` or `StorageBytes` alongside other
+> fields. Fe 26.4.1 fixes this regression and includes additional borrow-checking
+> fixes. Please use 26.4.1 when trying the features described below.
+
+The Fe team is happy to announce Fe 26.4, now available as Fe 26.4.1!
 
 This release improves borrow checking, adds an experimental native backend,
 and expands the standard library with helpers for Solidity storage layouts, external calls,
 text formatting, and full-precision arithmetic. It also improves ABI
 compatibility, fixes deterministic deployment, and reduces gas, bytecode size,
-and compilation time. Highlights are below; the full changelog is here:
-[v26.4.0](https://github.com/argotorg/fe/releases/tag/v26.4.0)
+and compilation time. Highlights are below; the release notes cover the
+[26.4.0 features](https://github.com/argotorg/fe/releases/tag/v26.4.0) and the
+[26.4.1 fixes](https://github.com/argotorg/fe/releases/tag/v26.4.1).
+
+## Fixes in 26.4.1
+
+The main reason for this patch is a borrow-checking regression that blocked
+valid contract logic. Calling a `mut self` method that uses a `StorageMap` or
+`StorageBytes` field could produce a false borrow conflict when the receiver
+was a contract field whose struct also contained other fields. This affected
+calls from `recv` handlers, for example. These calls are now accepted again.
+
+The patch also corrects ownership and borrow checking for compile-time constant
+values. Invalid repeated moves of non-`Copy` values and reads that conflict with
+a live mutable borrow are now rejected, as they already were for runtime
+values. Conversely, passing an unannotated string literal to a generic `own`
+parameter more than once no longer produces a false move conflict.
+
+All the features introduced in 26.4.0 and described below are included in
+26.4.1. If you installed 26.4.0, please upgrade to the patched release.
 
 ## Borrow checking improvements
 
@@ -378,8 +403,8 @@ A few more changes worth calling out:
 
 ## Try it!
 
-Fe 26.4.0 is available now for Linux, macOS, and Windows. Let us know what you
-think!
+[Fe 26.4.1](https://github.com/argotorg/fe/releases/tag/v26.4.1) is available
+now for Linux, macOS, and Windows and replaces 26.4.0. Let us know what you think!
 
 - **[fe-lang.org](https://fe-lang.org)**
 - **[Write your first contract](https://fe-lang.org/getting-started/first-contract/)**: Get hands-on in minutes
