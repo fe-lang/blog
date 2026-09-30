@@ -82,9 +82,13 @@ Fe can now compile programs to host-native executables on x86-64 Linux and
 AArch64 macOS. The native backend uses Cranelift and supports standalone files
 as well as whole workspaces with dependencies.
 
-Build the Fe compiler with the `cranelift` feature enabled to try it. A minimal
-program uses `pub fn main() -> i32`, with the return value becoming the process
-exit code:
+Native support is not yet included in the published compiler binaries. To try
+it in Fe 26.4, you currently need to build the compiler from source with the
+`cranelift` feature enabled. Including native support in the published binaries
+is planned for Fe 26.5.
+
+A minimal program uses `pub fn main() -> i32`, with the return value becoming
+the process exit code:
 
 ```rust
 pub fn main() -> i32 {
