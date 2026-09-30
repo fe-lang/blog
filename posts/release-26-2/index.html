@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    
+    
+    <title>
+        Fe 26.2.0
+    </title>
+    
+
+    
+    
+
+    
+    
+        <link href=https://blog.fe-lang.org/fonts.css rel="stylesheet" />
+    
+        <!-- <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet"> -->
+
+    
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="ed2d919e-0e43-45d9-ac8a-7bed61075d36"></script>
+
+    
+    
+
+    
+    <link rel="alternate" type="application/atom+xml" title="" href="https://blog.fe-lang.org/atom.xml">
+
+    
+    
+    
+        <link rel="stylesheet" type="text/css" href="https://blog.fe-lang.org/theme/light.css"/>
+    
+
+    <link rel="stylesheet" type="text/css" media="screen" href=https://blog.fe-lang.org/main.css />
+
+
+    
+        
+            <link rel="stylesheet" href="https://blog.fe-lang.org/custom.css">
+        
+    
+</head>
+
+<body>
+    <div class="content">
+        <header>
+  <section class="nav">
+    <div>
+      <a href="https://fe-lang.org" class="no-border">
+        <img src="https:&#x2F;&#x2F;blog.fe-lang.org/fe-bare.svg" alt="Fe Programming Language">
+      </a>
+    </div>
+    <input id="menu-toggle" type="checkbox" />
+    <label class='menu-button-container' for="menu-toggle">
+      <div class='menu-button'></div>
+    </label>
+    <ul class="menu">
+      <li>
+        <a href="https://fe-lang.org/getting-started/what-is-fe/" class="a-non-active" title="Get started">Get started</a>
+      </li>
+      <li>
+        <a href="https://fe-lang.org/getting-started/key-concepts/" class="a-non-active" title="Learn">Learn</a>
+      </li>
+      <li>
+        <a href="https://fe-lang.zulipchat.com/join/dqvssgylulrmjmp2dx7vcbrq" class="a-non-active" title="Community">Community</a>
+      </li>
+      <li>
+        <a href="https:&#x2F;&#x2F;blog.fe-lang.org" class="a-active" title="Blog">Blog</a>
+      </li>
+    </ul>
+  </section>
+</header>
+
+        
+        
+    
+<main>
+    <article>
+        <div class="title">
+            
+            
+    <div class="page-header">
+        Fe 26.2.0<span class="primary-color" style="font-size: 1.6em">.</span>
+    </div>
+
+
+            
+                <div class="meta">
+                    Posted on 2026-06-25
+
+                    
+                </div>
+            
+        </div>
+
+        
+
+        
+        
+
+        <section class="body">
+            <p>The Fe team is happy to announce the release of Fe 26.2.0!</p>
+<p>This release is focused on gas and bytecode-size optimizations, along with some
+language, standard library, and tooling improvements. Highlights are below; the full changelog is
+here: <a rel="external" href="https://github.com/argotorg/fe/releases/tag/v26.2.0">v26.2.0</a></p>
+<p>The motivating test cases for many of the optimizations are Fe ports
+of the Ethereum beacon deposit contract and the Uniswap v3 core contracts.
+Gas and bytecode size are quite a bit better than in previous releases.
+The deposit contract can be seen here: <a rel="external" href="https://fe-lang.org/examples/deposit-contract/">deposit_contract.fe</a>.
+Gas and bytecode size comparisons with the Solidity implementation are below
+(fe -O2 vs solc --via-IR).</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="plain"><span class="giallo-l"><span>bytecode size      fe      solc      fe vs solc</span></span>
+<span class="giallo-l"><span>-----------------------------------------------</span></span>
+<span class="giallo-l"><span>init             2562      3082      -520 (-16.9%)</span></span>
+<span class="giallo-l"><span>runtime          2478      2844      -366 (-12.9%)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>call gas                         fe      solc      fe vs solc</span></span>
+<span class="giallo-l"><span>------------------------------------------------------------</span></span>
+<span class="giallo-l"><span>deposit#0                     79719     81089    -1370 (-1.7%)</span></span>
+<span class="giallo-l"><span>deposit#1                     65088     66629    -1541 (-2.3%)</span></span>
+<span class="giallo-l"><span>deposit#2                     45507     46877    -1370 (-2.9%)</span></span>
+<span class="giallo-l"><span>get_deposit_root(after#2)    102985    109170    -6185 (-5.7%)</span></span>
+<span class="giallo-l"><span>get_deposit_count(after#2)    23616     24099     -483 (-2.0%)</span></span></code></pre><h2 id="immutable-contract-fields">Immutable contract fields</h2>
+<p>Fe now supports Solidity-style immutable contract fields. These are set during contract
+initialization and never change during the lifetime of the contract. The values are appended to the end of the runtime bytecode, and read at runtime with a <code>CODECOPY</code> operation, which is much cheaper than storage access.</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">pub</span><span> contract</span><span style="color: #B392F0;"> Token</span><span> uses (ctx</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Ctx</span><span>) {</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">    // Immutable: written once during init, embedded in the contract code</span></span>
+<span class="giallo-l"><span>    owner</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Address</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #6A737D;">    // Mutable: lives in storage</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    mut</span><span> store</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> TokenStore</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #B392F0;">    init</span><span>(initial_supply</span><span style="color: #F97583;">:</span><span> u256) uses (ctx,</span><span style="color: #F97583;"> mut</span><span> owner,</span><span style="color: #F97583;"> mut</span><span> store) {</span></span>
+<span class="giallo-l"><span>        owner</span><span style="color: #F97583;"> =</span><span> ctx</span><span style="color: #F97583;">.</span><span style="color: #B392F0;">caller</span><span>()</span></span>
+<span class="giallo-l"><span>        store</span><span style="color: #F97583;">.</span><span>total_supply </span><span style="color: #F97583;">=</span><span> initial_supply</span></span>
+<span class="giallo-l"><span>        store</span><span style="color: #F97583;">.</span><span>balances</span><span style="color: #F97583;">.</span><span style="color: #B392F0;">set</span><span>(key</span><span style="color: #F97583;">:</span><span> ctx</span><span style="color: #F97583;">.</span><span style="color: #B392F0;">caller</span><span>(), value</span><span style="color: #F97583;">:</span><span> initial_supply)</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    recv</span><span style="color: #B392F0;"> TokenMsg</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">        Owner</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> Address</span><span> uses (owner) { </span></span>
+<span class="giallo-l"><span>            owner </span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">        TotalSupply</span><span style="color: #F97583;"> -&gt;</span><span> u256 uses (store) { </span></span>
+<span class="giallo-l"><span>            store</span><span style="color: #F97583;">.</span><span>total_supply </span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">        BalanceOf</span><span> { account }</span><span style="color: #F97583;"> -&gt;</span><span> u256 uses (store) { </span></span>
+<span class="giallo-l"><span>            store</span><span style="color: #F97583;">.</span><span>balances</span><span style="color: #F97583;">.</span><span style="color: #B392F0;">get</span><span>(key</span><span style="color: #F97583;">:</span><span> account) </span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>Note that an immutable field is bound as a <code>mut</code> effect in the <code>init</code> block (<code>uses (mut owner)</code>).
+Immutable fields must be initialized in <code>init</code>; failure to do so is a compile-time error.</p>
+<h2 id="assert-built-in"><code>assert!</code> built-in</h2>
+<p>Fe now has an <code>assert!</code> built-in pseudo-macro:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">fn</span><span style="color: #B392F0;"> validate_pubkey_len</span><span>(pubkey_len</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> usize</span><span>) {</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    assert!</span><span>(pubkey_len</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 48</span><span>,</span><span style="color: #9ECBFF;"> &quot;invalid pubkey length&quot;</span><span>)</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p><code>assert!(condition)</code> reverts with Solidity-compatible <code>Panic(0x01)</code> when the
+condition is false. <code>assert!(condition, "message")</code> reverts with
+Solidity-compatible <code>Error(string)</code> data, matching the shape tools already
+understand from Solidity's <code>require</code>.</p>
+<p>This functionality was previously implemented in the standard library as <code>assert</code> and
+<code>assert_msg</code> functions; however, calling a normal function always evaluates its arguments
+and this led to unnecessary gas usage on the non-error path. Making this a compiler built-in
+allows us to build the error string on the error path. In Rust, this would be accomplished with
+a macro; Fe doesn't (yet?) have macros.</p>
+<p><code>assert!</code> also works in <code>const fn</code>: if an assertion fails at compile time, the compiler
+reports the failing assertion and includes the message when one was provided.</p>
+<h2 id="associated-const-items-in-impl-blocks">Associated <code>const</code> items in <code>impl</code> blocks</h2>
+<p>Inherent <code>impl</code> blocks can now define associated <code>const</code> items.</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">pub struct</span><span style="color: #B392F0;"> Packed</span><span>&lt;</span><span style="color: #F97583;">const</span><span style="color: #79B8FF;"> BITS</span><span style="color: #F97583;">:</span><span> u256&gt; {}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">impl</span><span>&lt;</span><span style="color: #F97583;">const</span><span style="color: #79B8FF;"> BITS</span><span style="color: #F97583;">:</span><span> u256&gt;</span><span style="color: #B392F0;"> Packed</span><span>&lt;</span><span style="color: #B392F0;">BITS</span><span>&gt; {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    const</span><span style="color: #79B8FF;"> LANES</span><span style="color: #F97583;">:</span><span> u256</span><span style="color: #F97583;"> =</span><span style="color: #79B8FF;"> 256</span><span style="color: #F97583;"> /</span><span style="color: #79B8FF;"> BITS</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    const</span><span style="color: #79B8FF;"> LANE_MASK</span><span style="color: #F97583;">:</span><span> u256</span><span style="color: #F97583;"> =</span><span> (</span><span style="color: #79B8FF;">1</span><span style="color: #F97583;"> &lt;&lt;</span><span style="color: #79B8FF;"> BITS</span><span>)</span><span style="color: #F97583;"> -</span><span style="color: #79B8FF;"> 1</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">    pub fn</span><span style="color: #B392F0;"> lanes</span><span>(</span><span style="color: #79B8FF;">self</span><span>)</span><span style="color: #F97583;"> -&gt;</span><span> u256 {</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">        Self</span><span style="color: #F97583;">::</span><span style="color: #79B8FF;">LANES</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>Inherent consts take precedence over trait consts of the same name,
+with the trait const still reachable via a qualified path like
+<code>&lt;Foo as SomeTrait&gt;::X</code>.</p>
+<h2 id="optimization-levels">Optimization levels</h2>
+<p>The <code>fe</code> CLI now defaults to the <code>-O1</code> optimization level. This gives
+considerably faster compile times for large projects, with little loss in
+bytecode quality relative to <code>-O2</code>.</p>
+<p>Previously, <code>-O1</code> and <code>-O2</code> were effectively the same. Now <code>-O1</code> uses a cheaper
+stack-shuffling search, while still running the full optimization pipeline.
+This gets close to <code>-O2</code> gas and bytecode size while substantially reducing
+compile time for large projects. <code>-O2</code> keeps the more expensive exact stack-shuffling
+search. <code>-O0</code> is now much faster because it skips the main optimizer and uses a greedy
+heuristic for stack shuffling.</p>
+<h2 id="machine-evm-lowering">Machine EVM lowering</h2>
+<p>Sonatina's EVM backend now lowers through a lower-level "machine EVM"
+instruction set before final bytecode emission. Fe generates high-level Sonatina
+IR with full type information, including struct, enum, and array types and operations.
+This representation is optimized, then lowered to the low-level IR, which is
+optimized again by the same passes.</p>
+<p>Running the optimizer on both representations gives the compiler
+more room to clean up stack use, memory use, and repeated generated code after
+the main pipeline has already run. The bytecode and memory improvements below
+mostly fall out of this two-stage approach.</p>
+<h2 id="evm-bytecode-improvements">EVM bytecode improvements</h2>
+<h3 id="push-shrinking">PUSH shrinking</h3>
+<p>Large EVM constants are now emitted in shorter forms when a small runtime
+operation can replace a much larger literal. This is especially useful for ABI
+selectors and masks, which appear frequently in generated wrapper code, error
+paths, and integer cleanup logic.</p>
+<p>For example, a selector stored in the high four bytes of an ABI word, previously
+pushed as a 32-byte literal:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="plain"><span class="giallo-l"><span>PUSH32 0x4e487b7100000000000000000000000000000000000000000000000000000000</span></span></code></pre>
+<p>is now emitted as a short selector plus a shift:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="plain"><span class="giallo-l"><span>PUSH4 0x4e487b71</span></span>
+<span class="giallo-l"><span>PUSH1 0xe0</span></span>
+<span class="giallo-l"><span>SHL</span></span></code></pre>
+<p>A similar transformation applies to low-bit masks:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="plain"><span class="giallo-l"><span>PUSH20 0xffffffffffffffffffffffffffffffffffffffff</span></span></code></pre>
+<p>becomes:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="plain"><span class="giallo-l"><span>PUSH0</span></span>
+<span class="giallo-l"><span>NOT</span></span>
+<span class="giallo-l"><span>PUSH1 0x60</span></span>
+<span class="giallo-l"><span>SHR</span></span></code></pre>
+<p>These transformations trade a little runtime gas for reduced bytecode size, and
+are currently applied at all optimization levels. In a future release this will
+depend on the optimization level, with <code>-Os</code> most aggressively saving bytes and
+<code>-O2</code> sacrificing bytes for runtime gas.</p>
+<h3 id="code-and-data-deduplication">Code and data deduplication</h3>
+<p>Sonatina now deduplicates function bodies that lower to identical EVM bytecode
+<em>after</em> optimization. Previously, two functions were only considered the same
+when their Sonatina IR was identical, which left some bloat when distinct
+functions optimized down to the same bytecode. The backend also removes repeated
+constant-only helper parameters when every private call passes the same value,
+and deduplicates terminal return/revert code, which shrinks error-handling paths.</p>
+<h2 id="memory-optimizations">Memory optimizations</h2>
+<p>Several improvements focus on temporary memory:</p>
+<ul>
+<li>Private temporary buffers can be placed in fixed scratch slots when their
+lifetimes don't overlap.</li>
+<li>Return and revert payloads can be built at fixed addresses instead of going
+through the heap allocator.</li>
+<li>Known free-pointer bounds are reused across internal calls, avoiding redundant
+allocator setup.</li>
+<li>Unnecessary overflow checks are dropped for offsets inside statically sized EVM
+allocations.</li>
+</ul>
+<p>This matters most in code with many generated helpers, ABI paths, and error
+payloads. In the checked-in differential deposit-contract benchmark, Fe's deposit
+calls are now slightly cheaper than the best Solidity variant in the comparison
+run, and <code>get_deposit_root</code> is noticeably cheaper.</p>
+<h2 id="const-data-and-large-arrays">Const data and large arrays</h2>
+<p>Fe 26.2 benefits from several improvements to const array handling in Sonatina.</p>
+<p>Fe lowers constant aggregates as shared const references in Sonatina IR, and
+Sonatina decides how to materialize the const values.</p>
+<p>Previously, a const array was naively stored in each function that used it.
+Now, these are stored as a single bytecode data region, dramatically reducing
+bytecode size for large lookup tables that are used in several places. Static array
+access can be optimized down to a <code>PUSH</code> of the constant value. Some dynamic uses of const
+arrays can be optimized as well. For example, <code>[10, 20, 30, 40]</code> indexed by <code>i</code>
+in a loop compiles to <code>i*10 + 10</code> with no const region.</p>
+<p>Sonatina will also deduplicate const data, and coalesce <code>CODECOPY</code>s of individual elements
+into larger region copies where it's beneficial.</p>
+<h2 id="abi-encode-decode-efficiency">ABI encode/decode efficiency</h2>
+<p>The std library implementation of Solidity-compatible calldata ABI encoding/decoding
+is now much more efficient. On the receive-side, we now avoid redundant memory copies
+before decoding. Many small helper functions in the implementation have been marked <code>#[inline(always)]</code>,
+which avoids internal call overhead on hot paths. (Ideally Sonatina would inline these
+automatically; the inlining heuristics need more work.)</p>
+<p>A couple related fixes here too: ABI encoding for payloads with
+multiple dynamic fields, and for negative signed integers narrower than 256 bits was incorrrect.</p>
+<h2 id="must-use-and-fallible-precompiles"><code>#[must_use]</code> and fallible precompiles</h2>
+<p>This release adds support for a Rust-like <code>#[must_use]</code> attribute, which can be attached
+to any type definition or function. If a value of a <code>must_use</code> type or the return value
+of a <code>must_use</code> function isn't used, it will result in a compile-time error:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="plain"><span class="giallo-l"><span>error[8-0082]: unused value of type `Result&lt;PrecompileError, Option&lt;u256&gt;&gt;`</span></span>
+<span class="giallo-l"><span>  ┌─ src/verify.fe:9:5</span></span>
+<span class="giallo-l"><span>  │</span></span>
+<span class="giallo-l"><span>9 │     ecrecover(hash: hash, v: v, r: r, s: s)</span></span>
+<span class="giallo-l"><span>  │     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ use this value or explicitly discard it with `let _ = ...`</span></span>
+<span class="giallo-l"><span>  │</span></span>
+<span class="giallo-l"><span>  = this type is marked `#[must_use]`</span></span></code></pre>
+<p>This pairs with a change to the EVM crypto precompiles. <code>std::evm::crypto</code> now includes wrapper functions
+for all crypto-related precompiles (<code>ecrecover</code>, <code>sha256</code>, <code>ripemd160</code>, identity, Blake2F, KZG
+point evaluation, BLS12-381, and P-256); these wrappers return
+<code>Result&lt;PrecompileError, T&gt;</code> instead of reverting when the precompile
+call fails. <code>Result</code> is now marked <code>#[must_use]</code>, and thus can't be accidentally ignored.
+Calling <code>.unwrap()</code> will revert if the <code>Result</code> is an <code>Err</code>.</p>
+<h2 id="standard-library-additions">Standard library additions</h2>
+<ul>
+<li><code>Option::ok_or</code> and <code>Option::ok_or_else</code> (mirroring Rust's API).
+This can be combined with <code>Result::unwrap</code> to attach a typed error to an <code>Option</code> unwrap
+so reverts carry meaningful Solidity-compatible error data instead of <code>Panic(0x01)</code>.</li>
+<li><code>StorageMap</code> keys now support all primitive integer types (<code>u8</code>–<code>u128</code>,
+<code>usize</code>, <code>i8</code>–<code>i256</code>, <code>isize</code>) and <code>bool</code>, in addition to <code>u256</code>, <code>Address</code>,
+and tuples.</li>
+<li><code>core::num</code> gains the <code>Bounded</code> trait (<code>T::min()</code>/<code>T::max()</code> as <code>const fn</code>),
+and the <code>Abs</code> / <code>UnsignedAbs</code> traits for signed-magnitude operations with
+explicit stances on the <code>T::MIN</code> edge case.</li>
+<li>New <code>String&lt;N&gt;</code> utilities for concatenation and equality in both const and runtime code.</li>
+<li>Lossless <code>bool</code>-to-integer casts with <code>as</code> are now allowed. This is useful for hand-optimized branchless
+code.</li>
+</ul>
+<h2 id="tooling">Tooling</h2>
+<h3 id="contract-metadata">Contract metadata</h3>
+<p><code>fe build --emit metadata</code> writes a Solidity-standard <code>metadata.json</code>
+for each contract. This is used by verifiers like <a rel="external" href="https://sourcify.dev">Sourcify</a> to
+reproduce the build and verify the deployed bytecode.</p>
+<h3 id="fe-doc-improvements"><code>fe doc</code> improvements</h3>
+<ul>
+<li><code>msg</code> variants are now shown on the parent <code>msg</code> page</li>
+<li>contract docs now have init and message-handler sections</li>
+<li><code>#[test]</code> functions are now hidden from generated docs by default (restore them with <code>--include-tests</code>).</li>
+<li>The doc viewer now exposes CSS variables for fonts, weights, and layout, for easy retheming.</li>
+</ul>
+<h2 id="try-it">Try it!</h2>
+<p>Fe 26.2.0 is available now for Linux, macOS, and Windows. Let us know what you
+think!</p>
+<ul>
+<li><strong><a rel="external" href="https://fe-lang.org">fe-lang.org</a></strong></li>
+<li><strong><a rel="external" href="https://fe-lang.org/getting-started/first-contract/">Write your first contract</a></strong>: Get hands-on in minutes</li>
+<li><strong><a rel="external" href="https://fe-lang.zulipchat.com">Zulip</a></strong>: Join the conversation</li>
+</ul>
+
+        </section>
+
+        
+
+    </article>
+</main>
+
+
+    </div>
+</body>
+
+</html>

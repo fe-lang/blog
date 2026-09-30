@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    
+    
+    <title>
+        Fe Development Update #8
+    </title>
+    
+
+    
+    
+
+    
+    
+        <link href=https://blog.fe-lang.org/fonts.css rel="stylesheet" />
+    
+        <!-- <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet"> -->
+
+    
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="ed2d919e-0e43-45d9-ac8a-7bed61075d36"></script>
+
+    
+    
+
+    
+    <link rel="alternate" type="application/atom+xml" title="" href="https://blog.fe-lang.org/atom.xml">
+
+    
+    
+    
+        <link rel="stylesheet" type="text/css" href="https://blog.fe-lang.org/theme/light.css"/>
+    
+
+    <link rel="stylesheet" type="text/css" media="screen" href=https://blog.fe-lang.org/main.css />
+
+
+    
+        
+            <link rel="stylesheet" href="https://blog.fe-lang.org/custom.css">
+        
+    
+</head>
+
+<body>
+    <div class="content">
+        <header>
+  <section class="nav">
+    <div>
+      <a href="https://fe-lang.org" class="no-border">
+        <img src="https:&#x2F;&#x2F;blog.fe-lang.org/fe-bare.svg" alt="Fe Programming Language">
+      </a>
+    </div>
+    <input id="menu-toggle" type="checkbox" />
+    <label class='menu-button-container' for="menu-toggle">
+      <div class='menu-button'></div>
+    </label>
+    <ul class="menu">
+      <li>
+        <a href="https://fe-lang.org/getting-started/what-is-fe/" class="a-non-active" title="Get started">Get started</a>
+      </li>
+      <li>
+        <a href="https://fe-lang.org/getting-started/key-concepts/" class="a-non-active" title="Learn">Learn</a>
+      </li>
+      <li>
+        <a href="https://fe-lang.zulipchat.com/join/dqvssgylulrmjmp2dx7vcbrq" class="a-non-active" title="Community">Community</a>
+      </li>
+      <li>
+        <a href="https:&#x2F;&#x2F;blog.fe-lang.org" class="a-active" title="Blog">Blog</a>
+      </li>
+    </ul>
+  </section>
+</header>
+
+        
+        
+    
+<main>
+    <article>
+        <div class="title">
+            
+            
+    <div class="page-header">
+        Fe Development Update #8<span class="primary-color" style="font-size: 1.6em">.</span>
+    </div>
+
+
+            
+                <div class="meta">
+                    Posted on 2021-10-05
+
+                    
+                </div>
+            
+        </div>
+
+        
+
+        
+        
+
+        <section class="body">
+            <p>It's been a couple months since our <a href="/posts/development-update-7/">last update</a>. In this time, we've merged a total of <a rel="external" href="https://github.com/ethereum/fe/pulls?q=is%3Apr+is%3Amerged+closed%3A2021-10-04%3E2021-08-03">20 pull requests from 7 different contributors</a>. Here are some highlights.</p>
+<h2 id="we-shipped-2-more-releases">We shipped 2 more releases</h2>
+<ul>
+<li><a rel="external" href="https://github.com/ethereum/fe/releases/tag/v0.8.0-alpha">v0.8.0-alpha "Haxonite"</a></li>
+<li><a rel="external" href="https://github.com/ethereum/fe/releases/tag/v0.9.0-alpha">v0.9.0-alpha "Iridium"</a></li>
+</ul>
+<p>As always, you can find the binaries and notes on the release pages.</p>
+<h2 id="self-as-a-parameter"><code>self</code> as a parameter</h2>
+<p>The <code>self</code> value is no longer implicitly defined in all code blocks. It must now be declared as the first parameter in a contract function signature.</p>
+<p>This change was made as part of an effort to make function access more explicit. There is a similar change coming with <a rel="external" href="https://github.com/ethereum/fe/issues/558">#558</a>.</p>
+<p>Added in <a rel="external" href="https://github.com/ethereum/fe/pull/520">#520</a>.</p>
+<h2 id="fn-instead-of-def"><code>fn</code> instead of <code>def</code></h2>
+<p>Fe no longer uses the <code>def</code> keyword as a label for function definitions. We use <code>fn</code> instead now. This makes the syntax more clear.</p>
+<p>Added in <a rel="external" href="https://github.com/ethereum/fe/pull/496">#496</a>.</p>
+<h2 id="query-based-analysis">Query-based analysis</h2>
+<p>The analyzer was previously implemented as a single pass through the AST, which meant that it wasn't possible to refer to a type defined later in the file or define recursive types. To solve this problem and to improve the overall design of the analyzer, we now use <a rel="external" href="https://crates.io/crates/salsa">Salsa</a>, and thus a query-based style.</p>
+<p>Salsa is used extensively in <a rel="external" href="https://github.com/rust-analyzer/rust-analyzer">rust-analyzer</a>, which is where we got the idea to use it.</p>
+<p>Added in <a rel="external" href="https://github.com/ethereum/fe/pull/468">#468</a>.</p>
+<h2 id="other-features-and-bugfixes">Other features and bugfixes</h2>
+<ul>
+<li>Typo fix in docs (thanks <a rel="external" href="https://github.com/jacobkaufmann">@jacobkaufmann</a>!) <a rel="external" href="https://github.com/ethereum/fe/pull/549">#549</a></li>
+<li>Fuzzer crash fixed <a rel="external" href="https://github.com/ethereum/fe/pull/546">#546</a></li>
+<li>Readme improvements (thanks <a rel="external" href="https://github.com/zora89">@zora89</a>!) <a rel="external" href="https://github.com/ethereum/fe/pull/544">#544</a></li>
+<li>Pretty printed display of AST <a rel="external" href="https://github.com/ethereum/fe/pull/540">#540</a></li>
+<li>Analyzer checks for shadowing of built-ins and generic arg lists where they don't belong <a rel="external" href="https://github.com/ethereum/fe/pull/539">#539</a></li>
+<li>Don't ignore non-fatal parser errors when analysis succeeds <a rel="external" href="https://github.com/ethereum/fe/pull/535">#535</a></li>
+<li>Fix "analysis failed but no diagnostics were emitted" panics <a rel="external" href="https://github.com/ethereum/fe/pull/534">#534</a></li>
+<li>Add support for numeric invert operator <a rel="external" href="https://github.com/ethereum/fe/pull/526">#526</a></li>
+<li>Check labels in function calls on self and external contracts <a rel="external" href="https://github.com/ethereum/fe/pull/518">#518</a></li>
+<li>Cover all remaining statements and expressions in the spec <a rel="external" href="https://github.com/ethereum/fe/pull/514">#514</a></li>
+<li>Fuzzer crash fixed (thanks <a rel="external" href="https://github.com/andy-ow">@andy-ow</a>!) <a rel="external" href="https://github.com/ethereum/fe/pull/510">#510</a></li>
+<li><code>let</code> var decl (thanks <a rel="external" href="https://github.com/WilfredTA">@WilfredTA</a>!) <a rel="external" href="https://github.com/ethereum/fe/pull/509">#509</a></li>
+<li>Validate string literals to only allow a subset of ASCII chars <a rel="external" href="https://github.com/ethereum/fe/pull/506">#506</a></li>
+<li>Reject certain code that should return but doesn't  <a rel="external" href="https://github.com/ethereum/fe/pull/502">#502</a></li>
+<li>Overhaul spec content <a rel="external" href="https://github.com/ethereum/fe/pull/489">#489</a></li>
+</ul>
+<h2 id="what-s-next">What's next</h2>
+<p>We are still focused on <a href="/posts/fes-path-to-production/">cutting a beta release</a> before the end of the year and will keep the community updated. For more information about our immediate goals and to see whats under development, please see the issues and PRs in our <a rel="external" href="https://github.com/ethereum/fe">repository</a>.</p>
+<hr />
+<p>Stay tuned for more updates and monthly releases.</p>
+
+        </section>
+
+        
+
+    </article>
+</main>
+
+
+    </div>
+</body>
+
+</html>
