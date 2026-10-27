@@ -24,6 +24,16 @@ first-time Fe developers. You have until **November 24** to finish your project.
 Register it by **November 17** so we can check the details and reach you before
 the final deadline.
 
+## Dates at a glance
+
+| Date | Milestone |
+| --- | --- |
+| November 3, 2026, 00:00 UTC | Build window opens. Start building. |
+| November 17, 2026, 23:59 UTC | Project registration closes. |
+| November 24, 2026, 23:59 UTC | Final submissions close. |
+| November 25–December 1, 2026 | Eligibility checks, judging, and results preparation. |
+| December 1, 2026 | Winners announced. |
+
 ## $5,000 in prizes
 
 The [Argot Collective](https://argot.org) is funding a **$5,000 prize pool**, awarded to the top
@@ -111,8 +121,8 @@ a one-sentence idea, team members, and one responsible human contact we can
 reach. Include a repository link if you already have one; a finished project
 is not required.
 
-Registration helps us resolve missing information before the final week. It is
-not a scored submission, and your idea can evolve as you build. Your confirmation
+Registration helps us resolve missing information before the final week. Your
+idea can evolve as you build. Your confirmation
 will explain how to update your details and make your final submission.
 
 **[Register your project](https://docs.google.com/forms/d/e/1FAIpQLSehDUUbqfQt67Ecy21zIsOFN7pp4orx9Ko9DKCWcDkjhEUVBg/viewform)**
@@ -210,16 +220,6 @@ ideas, and share progress. You do not need previous Fe experience to take part.
 [office-hours channel](https://fe-lang.zulipchat.com/#narrow/channel/594128-office-hours)
 on Fe Zulip. If something blocks your entry, email
 [hello@fe-lang.org](mailto:hello@fe-lang.org).
-
-## Dates at a glance
-
-| Date | Milestone |
-| --- | --- |
-| November 3, 2026, 00:00 UTC | Build window opens. Start building. |
-| November 17, 2026, 23:59 UTC | Project registration closes. |
-| November 24, 2026, 23:59 UTC | Final submissions close. |
-| November 25–December 1, 2026 | Eligibility checks, judging, and results preparation. |
-| December 1, 2026 | Winners announced. |
 
 Pick an idea, explore what Fe can do, and make something you want other
 developers to try. **Three weeks. $5,000 in prizes. Show us what you can build.**
