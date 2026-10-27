@@ -11,12 +11,11 @@ before publishing. -->
 
 The Fe team is happy to announce the release of Fe 26.5.0!
 
-This is the biggest Fe release so far. Fe now has mutable value semantics:
-references are no longer values, and a new access checker replaces the borrow
-checker. The release also adds closures, tuple structs, `unsafe` blocks, and
+This is the biggest Fe release so far. Fe now has a simpler borrowing model: 
+"mutable value semantics". The release also adds closures, tuple structs, `unsafe` blocks, and
 const `where` predicates. Typed ETH amounts and timestamps are new, storage
 layouts are now Solidity-compatible, and the standard library has grown
-considerably. The native backend now ships in the release binaries. Contracts
+considerably. The experimental native backend now ships in the release binaries. Contracts
 are smaller and cheaper, and the compiler is faster.
 
 Many of these changes are breaking; the [upgrade notes](#upgrading-from-26-4)
@@ -25,8 +24,16 @@ changelog is here: [v26.5.0](https://github.com/argotorg/fe/releases/tag/v26.5.0
 
 ## Mutable value semantics
 
-Every value in Fe now has exactly one owner, and a reference is never a value.
-`ref` and `mut` are no longer types, so a struct cannot hold a borrow. Instead,
+We've replaced Fe's rust-like borrow checker with a simpler, stricter system 
+known as mutable value semantics, inspired by Hylo. The old borrow checker
+was very complex, and a source of many bugs. In practice, code changes will be
+minor. The most notable difference is that structs can no longer contain borrows;
+this pattern was primarily used for rust-style iterator structs. Iteration on
+user-defined types is still possible, via a new set of structs and traits that
+don't require holding a borrow of the collection being iterated. 
+More on iteration below.
+
+A reference is no longer a value, and `ref` and `mut` are no longer types. Instead,
 they describe how a function or binding *accesses* a place owned by someone
 else. An access exists only as a parameter, a binding, or the result of a
 call, and it ends at its last use.
@@ -38,28 +45,33 @@ when they overlap and at least one of them writes, so a function can hold
 mutable access to two different fields of a struct at the same time:
 
 ```rust
-struct Account {
-    balance: u256,
-    nonce: u256,
+struct Pool {
+    reserve0: u256,
+    reserve1: u256,
 }
 
-fn credit(_ balance: mut u256, amount: u256) {
-    balance += amount
+/// Trades `amount_in` of one token for the other, keeping the product of
+/// the two reserves.
+fn swap(input: mut u256, output: mut u256, amount_in: u256) -> u256 {
+    let amount_out = output * amount_in / (input + amount_in)
+    input += amount_in
+    output -= amount_out
+    amount_out
 }
 
 #[test]
 fn accesses() {
-    var acct = Account { balance: 10, nonce: 0 }
+    var pool = Pool { reserve0: 1000, reserve1: 1000 }
 
-    // Two mutable accesses to different fields of one struct.
-    let b = mut acct.balance
-    let n = mut acct.nonce
-    b += 5
-    n += 1
+    // `swap` holds mutable access to both reserves at once. The caller
+    // picks the direction by choosing which field goes where.
+    let out = swap(input: mut pool.reserve0, output: mut pool.reserve1, amount_in: 1000)
+    assert!(out == 500)
+    assert!(pool.reserve0 == 2000 && pool.reserve1 == 500)
 
-    credit(mut acct.balance, amount: 5)
-    assert!(acct.balance == 20)
-    assert!(acct.nonce == 1)
+    let back = swap(input: mut pool.reserve1, output: mut pool.reserve0, amount_in: 500)
+    assert!(back == 1000)
+    assert!(pool.reserve0 == 1000 && pool.reserve1 == 1000)
 }
 ```
 
@@ -143,6 +155,9 @@ fn closures() {
     }
 }
 ```
+
+For now, iteration can only be used in `for` loops. Rust-style `let ys = xs.filter(..).collect()`
+is not yet supported.
 
 Generic functions take a callable with a bound such as `F: Fn(u256) -> bool`
 and call it as `f(x)`. Closures work in contract code too, where their bodies
@@ -429,7 +444,7 @@ fe build --backend native --out-dir out hello.fe
 ./out/hello
 ```
 
-Native executables are now the backend's default output, so `--emit executable`
+Native executables are now the native backend's default output, so `--emit executable`
 is no longer needed. On the other release targets, the native backend is
 available for `--emit ir`. Native test suites also compile much faster, since
 they now share one runtime package across all modules.
@@ -443,6 +458,9 @@ produces the same bytes as towncrier, which its test suite checks by replaying
 all 38 Fe releases since 2021. Our release pipeline builds eisenbote with the
 compiler that is about to be released, so every release now also compiles and
 runs a real native Fe program.
+
+The native backend is still experimental, but there are big improvements coming
+in the next release.
 
 This release also adds experimental compilation of Fe programs as SP1 RV64IM
 zkVM guests. It is not part of the release binaries; build the compiler from
