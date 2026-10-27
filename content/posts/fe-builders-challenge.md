@@ -5,7 +5,7 @@ date = "2026-10-27"
 
 What would you build with a fresh set of tools for the EVM?
 
-The **Fe Builders Challenge** runs from **November 3 to November 24**: three
+The **[Fe Builders Challenge](https://fe-lang.org/contest/)** runs from **November 3 to November 24**: three
 weeks to explore Fe, build something worth sharing, and compete for
 **$5,000 in prizes**. Bring a protocol
 you want to rethink, a library you wish existed, a cryptographic idea, or a game
@@ -23,6 +23,9 @@ The contest is fully online, open to individuals and teams, and welcomes
 first-time Fe developers. You have until **November 24** to finish your project.
 Register it by **November 17** so we can check the details and reach you before
 the final deadline.
+
+**All details in one place: [fe-lang.org/contest](https://fe-lang.org/contest/)**,
+with the full rules, the FAQ, the jury, and the links to register and submit.
 
 ## Dates at a glance
 
@@ -223,3 +226,4 @@ on Fe Zulip. If something blocks your entry, email
 
 Pick an idea, explore what Fe can do, and make something you want other
 developers to try. **Three weeks. $5,000 in prizes. Show us what you can build.**
+Start at [fe-lang.org/contest](https://fe-lang.org/contest/).
