@@ -266,3 +266,9 @@ header {
   }
 }
 }
+
+// `html` sets `line-height: 1.6em`, which headings inherit as a fixed length, so
+// wrapped titles overlap. A unitless value scales with the heading's font size.
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.25;
+}
