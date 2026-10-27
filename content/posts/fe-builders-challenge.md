@@ -167,7 +167,7 @@ Eight judges will review the projects:
 - **[Ahmed Castro](https://x.com/FilosofiaCodigo)**, Filosofía Código, developer and educator
 - **[Marius van der Wijden](https://x.com/vdWijden)**, Ethereum Foundation, core developer
 - **[Philogy](https://x.com/real_philogy)**, security researcher and creator of Plank
-- **[Rahul Kothari](https://www.linkedin.com/in/iamrahulkothari/)**, Ethereum Foundation
+- **[Rahul Kothari](https://x.com/omw_to_the_moon)**, Ethereum Foundation, dev tooling lead
 - **[jistro](https://x.com/jistro)**, EVVM, smart contract developer
 - **[Grant Wuerker](https://github.com/g-r-a-n-t)**, Argot Collective, Fe core developer
 - **[Micah Scopes](https://github.com/micahscopes)**, Argot Collective, Fe core developer
