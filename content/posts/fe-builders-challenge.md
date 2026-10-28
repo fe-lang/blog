@@ -85,8 +85,8 @@ known limitations.
 Build a library, a standard-library addition, or a developer tool with a
 meaningful Fe component. A focused, well-tested library with a clear API can be
 a strong submission. Standard-library work does not need to be merged upstream
-before the deadline. Pure compiler contributions are outside this contest's
-scope.
+before the deadline. Contributions to the Rust codebases of the Fe compiler and
+Sonatina are outside this contest's scope.
 
 ### Surprise us
 
