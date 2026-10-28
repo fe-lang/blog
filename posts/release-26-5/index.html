@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    
+    
+    <title>
+        Fe 26.5.0
+    </title>
+    
+
+    
+    
+
+    
+    
+        <link href=https://blog.fe-lang.org/fonts.css rel="stylesheet" />
+    
+        <!-- <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet"> -->
+
+    
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="ed2d919e-0e43-45d9-ac8a-7bed61075d36"></script>
+
+    
+    
+
+    
+    <link rel="alternate" type="application/atom+xml" title="" href="https://blog.fe-lang.org/atom.xml">
+
+    
+    
+    
+        <link rel="stylesheet" type="text/css" href="https://blog.fe-lang.org/theme/light.css"/>
+    
+
+    <link rel="stylesheet" type="text/css" media="screen" href=https://blog.fe-lang.org/main.css />
+
+
+    
+        
+            <link rel="stylesheet" href="https://blog.fe-lang.org/custom.css">
+        
+    
+</head>
+
+<body>
+    <div class="content">
+        <header>
+  <section class="nav">
+    <div>
+      <a href="https://fe-lang.org" class="no-border">
+        <img src="https:&#x2F;&#x2F;blog.fe-lang.org/fe-bare.svg" alt="Fe Programming Language">
+      </a>
+    </div>
+    <input id="menu-toggle" type="checkbox" />
+    <label class='menu-button-container' for="menu-toggle">
+      <div class='menu-button'></div>
+    </label>
+    <ul class="menu">
+      <li>
+        <a href="https://fe-lang.org/getting-started/what-is-fe/" class="a-non-active" title="Get started">Get started</a>
+      </li>
+      <li>
+        <a href="https://fe-lang.org/getting-started/key-concepts/" class="a-non-active" title="Learn">Learn</a>
+      </li>
+      <li>
+        <a href="https://fe-lang.zulipchat.com/join/dqvssgylulrmjmp2dx7vcbrq" class="a-non-active" title="Community">Community</a>
+      </li>
+      <li>
+        <a href="https:&#x2F;&#x2F;blog.fe-lang.org" class="a-active" title="Blog">Blog</a>
+      </li>
+    </ul>
+  </section>
+</header>
+
+        
+        
+    
+<main>
+    <article>
+        <div class="title">
+            
+            
+    <div class="page-header">
+        Fe 26.5.0<span class="primary-color" style="font-size: 1.6em">.</span>
+    </div>
+
+
+            
+                <div class="meta">
+                    Posted on 2026-10-26
+
+                    
+                </div>
+            
+        </div>
+
+        
+
+        
+        
+
+        <section class="body">
+            <!-- Editorial note: release-day copy, based on argotorg/fe master at
+0e858372ca2ec7aed766b99f64459cefc708fe40 (2026-10-26), compared with v26.4.1.
+All Fe examples were checked with a release build of that commit. Confirm the
+release tag and platform artifacts, set the date, and remove draft status
+before publishing. -->
+<p>The Fe team is happy to announce the release of Fe 26.5.0!</p>
+<p>This is the biggest Fe release so far. Fe now has a simpler borrowing model:
+"mutable value semantics". The release also adds closures, tuple structs, <code>unsafe</code> blocks, and
+const <code>where</code> predicates. Typed ETH amounts and timestamps are new, storage
+layouts are now Solidity-compatible, and the standard library has grown
+considerably. The experimental native backend now ships in the release binaries. Contracts
+are smaller and cheaper, and the compiler is faster.</p>
+<p>Many of these changes are breaking; the <a href="https://blog.fe-lang.org/posts/release-26-5/#upgrading-from-26-4">upgrade notes</a>
+at the end summarize what existing code needs. Highlights are below; the full
+changelog is here: <a rel="external" href="https://github.com/argotorg/fe/releases/tag/v26.5.0">v26.5.0</a></p>
+<h2 id="mutable-value-semantics">Mutable value semantics</h2>
+<p>We've replaced Fe's rust-like borrow checker with a simpler, stricter system
+known as mutable value semantics, inspired by Hylo. The old borrow checker
+was very complex, and a source of many bugs. In practice, code changes will be
+minor. The most notable difference is that structs can no longer contain borrows;
+this pattern was primarily used for rust-style iterator structs. Iteration on
+user-defined types is still possible, via a new set of structs and traits that
+don't require holding a borrow of the collection being iterated.
+More on iteration below.</p>
+<p>A reference is no longer a value, and <code>ref</code> and <code>mut</code> are no longer types. Instead,
+they describe how a function or binding <em>accesses</em> a place owned by someone
+else. An access exists only as a parameter, a binding, or the result of a
+call, and it ends at its last use.</p>
+<p>A parameter is a read-only view (<code>x: T</code>), a mutable access (<code>x: mut T</code>), or
+owned (<code>x: own T</code>). A binding can take an access too: <code>let h = mut p.x</code> gives
+mutable access to <code>p.x</code> until the last use of <code>h</code>. Two accesses conflict only
+when they overlap and at least one of them writes, so a function can hold
+mutable access to two different fields of a struct at the same time:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">struct</span><span style="color: #B392F0;"> Pool</span><span> {</span></span>
+<span class="giallo-l"><span>    reserve0</span><span style="color: #F97583;">:</span><span> u256,</span></span>
+<span class="giallo-l"><span>    reserve1</span><span style="color: #F97583;">:</span><span> u256,</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #6A737D;">/// Trades `amount_in` of one token for the other, keeping the product of</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">/// the two reserves.</span></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span style="color: #B392F0;"> swap</span><span>(input</span><span style="color: #F97583;">: mut</span><span> u256, output</span><span style="color: #F97583;">: mut</span><span> u256, amount_in</span><span style="color: #F97583;">:</span><span> u256)</span><span style="color: #F97583;"> -&gt;</span><span> u256 {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    let</span><span> amount_out</span><span style="color: #F97583;"> =</span><span> output</span><span style="color: #F97583;"> *</span><span> amount_in</span><span style="color: #F97583;"> /</span><span> (input</span><span style="color: #F97583;"> +</span><span> amount_in)</span></span>
+<span class="giallo-l"><span>    input</span><span style="color: #F97583;"> +=</span><span> amount_in</span></span>
+<span class="giallo-l"><span>    output</span><span style="color: #F97583;"> -=</span><span> amount_out</span></span>
+<span class="giallo-l"><span>    amount_out</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>#[test]</span></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span style="color: #B392F0;"> accesses</span><span>() {</span></span>
+<span class="giallo-l"><span>    var pool</span><span style="color: #F97583;"> =</span><span style="color: #B392F0;"> Pool</span><span> { reserve0</span><span style="color: #F97583;">:</span><span style="color: #79B8FF;"> 1000</span><span>, reserve1</span><span style="color: #F97583;">:</span><span style="color: #79B8FF;"> 1000</span><span> }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #6A737D;">    // `swap` holds mutable access to both reserves at once. The caller</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">    // picks the direction by choosing which field goes where.</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    let</span><span> out</span><span style="color: #F97583;"> =</span><span style="color: #B392F0;"> swap</span><span>(input</span><span style="color: #F97583;">: mut</span><span> pool</span><span style="color: #F97583;">.</span><span>reserve0, output</span><span style="color: #F97583;">: mut</span><span> pool</span><span style="color: #F97583;">.</span><span>reserve1, amount_in</span><span style="color: #F97583;">:</span><span style="color: #79B8FF;"> 1000</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    assert!</span><span>(out</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 500</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    assert!</span><span>(pool</span><span style="color: #F97583;">.</span><span>reserve0 </span><span style="color: #F97583;">==</span><span style="color: #79B8FF;"> 2000</span><span style="color: #F97583;"> &amp;&amp;</span><span> pool</span><span style="color: #F97583;">.</span><span>reserve1 </span><span style="color: #F97583;">==</span><span style="color: #79B8FF;"> 500</span><span>)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">    let</span><span> back</span><span style="color: #F97583;"> =</span><span style="color: #B392F0;"> swap</span><span>(input</span><span style="color: #F97583;">: mut</span><span> pool</span><span style="color: #F97583;">.</span><span>reserve1, output</span><span style="color: #F97583;">: mut</span><span> pool</span><span style="color: #F97583;">.</span><span>reserve0, amount_in</span><span style="color: #F97583;">:</span><span style="color: #79B8FF;"> 500</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    assert!</span><span>(back</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 1000</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    assert!</span><span>(pool</span><span style="color: #F97583;">.</span><span>reserve0 </span><span style="color: #F97583;">==</span><span style="color: #79B8FF;"> 1000</span><span style="color: #F97583;"> &amp;&amp;</span><span> pool</span><span style="color: #F97583;">.</span><span>reserve1 </span><span style="color: #F97583;">==</span><span style="color: #79B8FF;"> 1000</span><span>)</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>Mutable variables are now declared with <code>var x = e</code>, which replaces
+<code>let mut x = e</code>. In patterns, <code>mut</code>, <code>ref</code>, and <code>var</code> mark the individual names
+being bound, as in <code>Some(mut v)</code> or <code>for mut x in xs</code>.</p>
+<h3 id="projections">Projections</h3>
+<p>A function that returns <code>ref T</code> or <code>mut T</code> gives its caller access to a place
+rather than a copy of a value. We call such a function a <em>projection</em>. The
+caller can assign through the result directly or bind it like any other
+access:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">struct</span><span style="color: #B392F0;"> Counter</span><span> {</span></span>
+<span class="giallo-l"><span>    hits</span><span style="color: #F97583;">:</span><span> u256,</span></span>
+<span class="giallo-l"><span>    misses</span><span style="color: #F97583;">:</span><span> u256,</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">impl</span><span style="color: #B392F0;"> Counter</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    fn</span><span style="color: #B392F0;"> slot</span><span>(</span><span style="color: #F97583;">mut</span><span style="color: #79B8FF;"> self</span><span>, hit</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> bool</span><span>)</span><span style="color: #F97583;"> -&gt; mut</span><span> u256 {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        if</span><span> hit {</span><span style="color: #F97583;"> mut</span><span style="color: #79B8FF;"> self</span><span style="color: #F97583;">.</span><span>hits }</span><span style="color: #F97583;"> else</span><span> {</span><span style="color: #F97583;"> mut</span><span style="color: #79B8FF;"> self</span><span style="color: #F97583;">.</span><span>misses }</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>#[test]</span></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span style="color: #B392F0;"> projections</span><span>() {</span></span>
+<span class="giallo-l"><span>    var c</span><span style="color: #F97583;"> =</span><span style="color: #B392F0;"> Counter</span><span> { hits</span><span style="color: #F97583;">:</span><span style="color: #79B8FF;"> 0</span><span>, misses</span><span style="color: #F97583;">:</span><span style="color: #79B8FF;"> 0</span><span> }</span></span>
+<span class="giallo-l"><span>    c</span><span style="color: #F97583;">.</span><span style="color: #B392F0;">slot</span><span>(hit</span><span style="color: #F97583;">:</span><span style="color: #79B8FF;"> true</span><span>)</span><span style="color: #F97583;"> +=</span><span style="color: #79B8FF;"> 2</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    let</span><span> m</span><span style="color: #F97583;"> = mut</span><span> c</span><span style="color: #F97583;">.</span><span style="color: #B392F0;">slot</span><span>(hit</span><span style="color: #F97583;">:</span><span style="color: #79B8FF;"> false</span><span>)</span></span>
+<span class="giallo-l"><span>    m</span><span style="color: #F97583;"> +=</span><span style="color: #79B8FF;"> 1</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    assert!</span><span>(c</span><span style="color: #F97583;">.</span><span>hits </span><span style="color: #F97583;">==</span><span style="color: #79B8FF;"> 2</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    assert!</span><span>(c</span><span style="color: #F97583;">.</span><span>misses </span><span style="color: #F97583;">==</span><span style="color: #79B8FF;"> 1</span><span>)</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>A projection can also <code>yield</code> its access and run code after the caller's last
+use of it, for example to write a modified value back to storage. Results can
+be shapes such as <code>Option&lt;mut T&gt;</code>, and a <code>mut?</code> function is written once and
+checked for both read and write use. Indexing, <code>MemBuffer::span</code>, and many
+other library methods now use this to replace separate <code>foo</code> and <code>foo_mut</code>
+methods.</p>
+<h3 id="the-access-checker">The access checker</h3>
+<p>A new access checker replaces the borrow checker. It works on a simpler model,
+since there are no reference values to track: each access lasts until its last
+use, and overlapping accesses conflict unless both only read. The
+<a rel="external" href="https://github.com/argotorg/fe/blob/master/docs/language/accesses.md">accesses guide</a>
+describes the rules in detail.</p>
+<h2 id="closures-and-iteration">Closures and iteration</h2>
+<p>Fe now has closures, such as <code>|x| x + 1</code> or
+<code>|acc: own u256, x: u256| -&gt; u256 { acc + x }</code>. A closure can be passed to any
+function that takes a callable, including <code>fold</code>, <code>any</code>, <code>count</code>, and <code>find</code> on
+collections, and to the <code>filter</code> and <code>map</code> loop adapters. A named function can
+be passed wherever a closure can.</p>
+<p>Loops are driven by method chains on the collection: <code>xs.enumerate()</code>,
+<code>xs.reversed()</code>, <code>xs.enumerate().take(3)</code>, or <code>xs.filter(..)</code>. A loop pattern
+can take the step apart, as in <code>for (i, x) in xs.enumerate()</code>.</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span>#[test]</span></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span style="color: #B392F0;"> closures</span><span>() {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    let</span><span> xs</span><span style="color: #F97583;">:</span><span> [u256;</span><span style="color: #79B8FF;"> 5</span><span>]</span><span style="color: #F97583;"> =</span><span> [</span><span style="color: #79B8FF;">1</span><span>,</span><span style="color: #79B8FF;"> 2</span><span>,</span><span style="color: #79B8FF;"> 3</span><span>,</span><span style="color: #79B8FF;"> 4</span><span>,</span><span style="color: #79B8FF;"> 5</span><span>]</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">    let</span><span> sum_of_squares</span><span style="color: #F97583;"> =</span><span> xs</span><span style="color: #F97583;">.</span><span style="color: #B392F0;">fold</span><span>(</span><span style="color: #79B8FF;">0</span><span>,</span><span style="color: #F97583;"> |</span><span>acc</span><span style="color: #F97583;">:</span><span> own u256, x</span><span style="color: #F97583;">:</span><span> u256</span><span style="color: #F97583;">| -&gt;</span><span> u256 { acc</span><span style="color: #F97583;"> +</span><span> x</span><span style="color: #F97583;"> *</span><span> x })</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    assert!</span><span>(sum_of_squares</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 55</span><span>)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    var evens</span><span style="color: #F97583;"> =</span><span style="color: #79B8FF;"> 0</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    for</span><span> x</span><span style="color: #F97583;"> in</span><span> xs</span><span style="color: #F97583;">.</span><span style="color: #B392F0;">filter</span><span>(</span><span style="color: #F97583;">|</span><span>x</span><span style="color: #F97583;">|</span><span> x</span><span style="color: #F97583;"> %</span><span style="color: #79B8FF;"> 2</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 0</span><span>) {</span></span>
+<span class="giallo-l"><span>        evens</span><span style="color: #F97583;"> +=</span><span> x</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    assert!</span><span>(evens</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 6</span><span>)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">    for</span><span> (i, x)</span><span style="color: #F97583;"> in</span><span> xs</span><span style="color: #F97583;">.</span><span style="color: #B392F0;">enumerate</span><span>() {</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">        assert!</span><span>(x</span><span style="color: #F97583;"> ==</span><span> i</span><span style="color: #F97583;"> as</span><span> u256</span><span style="color: #F97583;"> +</span><span style="color: #79B8FF;"> 1</span><span>)</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>For now, iteration can only be used in <code>for</code> loops. Rust-style <code>let ys = xs.filter(..).collect()</code>
+is not yet supported.</p>
+<p>Generic functions take a callable with a bound such as <code>F: Fn(u256) -&gt; bool</code>
+and call it as <code>f(x)</code>. Closures work in contract code too, where their bodies
+can use the contract's storage and other effects; a generic function that
+calls a closure declares <code>uses F::E</code> so that its callers provide those effects.</p>
+<p>A closure captures the values it uses by copy or move and cannot modify them,
+so state is passed through parameters and results, as <code>fold</code> does. Function
+and closure parameters can also be patterns, as in
+<code>pairs.fold(0, |acc, (a, b)| acc + a * b)</code>.</p>
+<h2 id="tuple-structs">Tuple structs</h2>
+<p>Tuple structs make newtypes much lighter to write. A tuple struct is
+constructed by calling its name, accessed by position, and destructured with a
+tuple pattern:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">struct</span><span style="color: #B392F0;"> Month</span><span>(</span><span style="color: #F97583;">pub</span><span style="color: #B392F0;"> u8</span><span>)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span style="color: #B392F0;"> days_in</span><span>(_ m</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Month</span><span>)</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> u8</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    match</span><span> m {</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">        Month</span><span>(</span><span style="color: #79B8FF;">2</span><span>)</span><span style="color: #F97583;"> =&gt;</span><span style="color: #79B8FF;"> 28</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">        Month</span><span>(</span><span style="color: #79B8FF;">4</span><span>)</span><span style="color: #F97583;"> |</span><span style="color: #B392F0;"> Month</span><span>(</span><span style="color: #79B8FF;">6</span><span>)</span><span style="color: #F97583;"> |</span><span style="color: #B392F0;"> Month</span><span>(</span><span style="color: #79B8FF;">9</span><span>)</span><span style="color: #F97583;"> |</span><span style="color: #B392F0;"> Month</span><span>(</span><span style="color: #79B8FF;">11</span><span>)</span><span style="color: #F97583;"> =&gt;</span><span style="color: #79B8FF;"> 30</span><span>,</span></span>
+<span class="giallo-l"><span>        _</span><span style="color: #F97583;"> =&gt;</span><span style="color: #79B8FF;"> 31</span><span>,</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>#[test]</span></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span style="color: #B392F0;"> tuple_structs</span><span>() {</span></span>
+<span class="giallo-l"><span>    var m</span><span style="color: #F97583;"> =</span><span style="color: #B392F0;"> Month</span><span>(</span><span style="color: #79B8FF;">10</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    assert!</span><span>(m</span><span style="color: #F97583;">.</span><span style="color: #79B8FF;">0</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 10</span><span>)</span></span>
+<span class="giallo-l"><span>    m</span><span style="color: #F97583;">.</span><span style="color: #79B8FF;">0</span><span style="color: #F97583;"> =</span><span style="color: #79B8FF;"> 2</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    assert!</span><span>(</span><span style="color: #B392F0;">days_in</span><span>(m)</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 28</span><span>)</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>Tuple structs can be generic, have <code>where</code> clauses, and be used as contract
+storage fields. <code>#[event]</code>, <code>#[error]</code>, and <code>#[abi]</code> remain limited to structs
+with named fields.</p>
+<h2 id="unsafe-blocks"><code>unsafe</code> blocks</h2>
+<p>Dereferencing a raw pointer or calling an <code>unsafe fn</code> now requires an
+<code>unsafe { .. }</code> block or an <code>unsafe fn</code>. A struct or enum field can be declared
+<code>unsafe</code> when safe code relies on its value, such as a buffer's length: reading
+it is safe, but setting or mutating it requires <code>unsafe</code>.</p>
+<p>A dependency's <code>unsafe</code> code, including its <code>unsafe impl</code>s, can only be used if
+<code>fe.toml</code> trusts the dependency with <code>allow_unsafe = true</code>.</p>
+<h2 id="const-where-predicates">Const <code>where</code> predicates</h2>
+<p>Items can now state boolean conditions on their const generic parameters. The
+condition is checked wherever the item is used, so invalid instantiations are
+rejected at compile time:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">struct</span><span style="color: #B392F0;"> Ring</span><span>&lt;</span><span style="color: #F97583;">const</span><span style="color: #79B8FF;"> N</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> usize</span><span>&gt;</span><span style="color: #F97583;"> where</span><span style="color: #B392F0;"> N</span><span style="color: #F97583;"> &gt;</span><span style="color: #79B8FF;"> 0</span><span> {</span></span>
+<span class="giallo-l"><span>    slots</span><span style="color: #F97583;">:</span><span> [u256;</span><span style="color: #B392F0;"> N</span><span>],</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">const fn</span><span style="color: #B392F0;"> is_power_of_two</span><span>(_ n</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> usize</span><span>)</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> bool</span><span> {</span></span>
+<span class="giallo-l"><span>    n</span><span style="color: #F97583;"> !=</span><span style="color: #79B8FF;"> 0</span><span style="color: #F97583;"> &amp;&amp;</span><span> (n</span><span style="color: #F97583;"> &amp;</span><span> (n</span><span style="color: #F97583;"> -</span><span style="color: #79B8FF;"> 1</span><span>))</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 0</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span style="color: #B392F0;"> mask</span><span>&lt;</span><span style="color: #F97583;">const</span><span style="color: #B392F0;"> N</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> usize</span><span>&gt;()</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> usize</span><span style="color: #F97583;"> where</span><span style="color: #B392F0;"> is_power_of_two</span><span>(</span><span style="color: #B392F0;">N</span><span>) {</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    N</span><span style="color: #F97583;"> -</span><span style="color: #79B8FF;"> 1</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>#[test]</span></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span style="color: #B392F0;"> const_predicates</span><span>() {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    let</span><span> r</span><span style="color: #F97583;"> =</span><span style="color: #B392F0;"> Ring</span><span>&lt;4&gt; { slots</span><span style="color: #F97583;">:</span><span> [</span><span style="color: #79B8FF;">0</span><span>;</span><span style="color: #79B8FF;"> 4</span><span>] }</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    assert!</span><span>(r</span><span style="color: #F97583;">.</span><span>slots[</span><span style="color: #79B8FF;">3</span><span>]</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 0</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    assert!</span><span>(mask&lt;</span><span style="color: #79B8FF;">8</span><span>&gt;()</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 7</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">    // `Ring&lt;0&gt;` or `mask&lt;6&gt;()` is rejected at compile time.</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>A generic caller satisfies a condition only by stating the same condition.
+Array repeat lengths and array types computed from generic parameters, such as
+<code>[0; N + 1]</code> or <code>[u8; T::LEN]</code>, are now accepted as well.</p>
+<h2 id="typed-eth-amounts-and-time">Typed ETH amounts and time</h2>
+<p><code>std::evm::units</code> adds <code>Wei</code> (an amount of native ETH), <code>Timestamp</code> (unix
+seconds), and <code>Duration</code> (seconds). The three types are in the std prelude,
+and they don't mix: <code>Timestamp + Duration</code> is a <code>Timestamp</code>,
+<code>Timestamp - Timestamp</code> is a <code>Duration</code>, and <code>Timestamp + Timestamp</code> or
+<code>Wei + Duration</code> do not compile.</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> std</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">evm</span><span style="color: #F97583;">::</span><span>{days, ether, gwei, weeks}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">const</span><span style="color: #B392F0;"> LOCK</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Duration</span><span style="color: #F97583;"> =</span><span> weeks(2)</span><span style="color: #F97583;"> +</span><span> days(3)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span> unlock_time(_ deposited_at</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Timestamp</span><span>)</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> Timestamp</span><span> {</span></span>
+<span class="giallo-l"><span>    deposited_at </span><span style="color: #F97583;">+</span><span style="color: #B392F0;"> LOCK</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span> fee(_ amount</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Wei</span><span>)</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> Wei</span><span> {</span></span>
+<span class="giallo-l"><span>    amount</span><span style="color: #F97583;">.</span><span>mul_div(numerator</span><span style="color: #F97583;">:</span><span> 3, denominator</span><span style="color: #F97583;">:</span><span> 1000)</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>#[test]</span></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span> units() {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    let</span><span> start </span><span style="color: #F97583;">=</span><span style="color: #B392F0;"> Timestamp</span><span style="color: #F97583;">::</span><span>from_seconds(1_700_000_000)</span></span>
+<span class="giallo-l"><span>    assert</span><span style="color: #F97583;">!</span><span>(unlock_time(start)</span><span style="color: #F97583;"> -</span><span> start </span><span style="color: #F97583;">==</span><span> days(17))</span></span>
+<span class="giallo-l"><span>    assert</span><span style="color: #F97583;">!</span><span>(fee(ether(1))</span><span style="color: #F97583;"> ==</span><span> gwei(3_000_000))</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">    // `start + start` or `ether(1) + days(1)` would not compile.</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>The constructors <code>ether</code>, <code>gwei</code>, <code>wei</code>, <code>days</code>, <code>hours</code>, and friends are
+<code>const fn</code>s, so they work in constant initializers. All three types are a
+single <code>uint256</code> in the ABI, so they can be <code>msg</code> fields, return values, event
+fields, contract fields, and <code>StorageMap</code> keys or values.</p>
+<p>The standard library uses them throughout: <code>Ctx::value</code> and <code>Ctx::balance</code>
+return <code>Wei</code>, <code>Ctx::timestamp</code> returns <code>Timestamp</code>, and every <code>value</code>
+parameter of the call and create APIs takes <code>Wei</code>. Write <code>value: Wei::zero()</code>
+where you previously wrote <code>value: 0</code>.</p>
+<h2 id="solidity-compatible-storage">Solidity-compatible storage</h2>
+<p>Storage layouts have been reworked to match Solidity's more closely. Narrow
+struct fields now share slots the way Solidity packs struct members, and
+<code>StorageMap</code> values use their type's native layout. Narrow signed values are
+stored as their own two's-complement bytes, and storage and transient fields
+are numbered separately.</p>
+<p>Storage collections are no longer <code>Copy</code> handles and no longer take <code>SALT</code>
+parameters. A collection takes its slot from the contract field that holds it,
+so collections are passed as <code>mut</code> or view parameters instead of by value.
+Transient fields are declared as <code>TSlot&lt;T&gt;</code> and accessed as <code>field.value</code>.</p>
+<p>New collections and helpers make it easier to work with existing Solidity
+layouts:</p>
+<ul>
+<li><code>std::evm::SolArray</code> for Solidity dynamic storage arrays (<code>T[]</code>), with small
+elements packed like Solidity, and <code>std::evm::SolEnumerableSet</code> for
+OpenZeppelin <code>EnumerableSet</code> storage.</li>
+<li><code>SolSlot::load</code> returns a <code>SolWord</code> for reading or updating several packed
+fields of a slot with a single <code>sload</code>/<code>sstore</code>.</li>
+<li><code>std::evm::layout</code> provides Solidity's slot derivations: <code>mapping_slot</code>,
+<code>array_data_slot</code>, and <code>element_location</code>.</li>
+<li><code>std::evm::heap::StorageHeap&lt;T&gt;</code>, a binary min-heap in storage after
+Solady's <code>MinHeapLib</code>.</li>
+</ul>
+<p>Note that the layout changes mean that contracts compiled with 26.5 do not
+share a storage layout with the same source compiled by 26.4.</p>
+<h2 id="solidity-abi-interop">Solidity ABI interop</h2>
+<p>The new <code>#[abi]</code> struct attribute encodes a struct like the Solidity tuple of
+its fields. Solidity structs such as Uniswap's <code>PoolKey</code> can now be used in
+<code>msg</code> fields and return types, in arrays, and inside other <code>#[abi]</code> structs
+without hand-written codecs:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> std</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">abi</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">sol</span><span style="color: #F97583;">::</span><span>{</span><span style="color: #B392F0;">Int24</span><span>,</span><span style="color: #B392F0;"> Uint24</span><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>#[abi]</span></span>
+<span class="giallo-l"><span style="color: #F97583;">struct</span><span style="color: #B392F0;"> PoolKey</span><span> {</span></span>
+<span class="giallo-l"><span>    currency0</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Address</span><span>,</span></span>
+<span class="giallo-l"><span>    currency1</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Address</span><span>,</span></span>
+<span class="giallo-l"><span>    fee</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Uint24</span><span>,</span></span>
+<span class="giallo-l"><span>    tick_spacing</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Int24</span><span>,</span></span>
+<span class="giallo-l"><span>    hooks</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Address</span><span>,</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>msg </span><span style="color: #B392F0;">PoolMsg</span><span> {</span></span>
+<span class="giallo-l"><span>    #[selector </span><span style="color: #F97583;">=</span><span> sol(&quot;register((address,address,uint24,int24,address))&quot;)]</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    Register</span><span> { key</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> PoolKey</span><span> }</span><span style="color: #F97583;"> -&gt;</span><span> u256,</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">pub</span><span> contract </span><span style="color: #B392F0;">Pools</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    mut</span><span> count</span><span style="color: #F97583;">:</span><span> u256,</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    recv </span><span style="color: #B392F0;">PoolMsg</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">        Register</span><span> { key }</span><span style="color: #F97583;"> -&gt;</span><span> u256 uses (</span><span style="color: #F97583;">mut</span><span> count) {</span></span>
+<span class="giallo-l"><span>            count </span><span style="color: #F97583;">+=</span><span> 1</span></span>
+<span class="giallo-l"><span>            count</span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p><code>#[abi]</code> structs whose fields all have Solidity types can also be <code>#[event]</code>
+and <code>#[error]</code> fields. Other ABI improvements:</p>
+<ul>
+<li><code>DynArray</code> can be indexed and looped over for every ABI element type,
+including multi-word structs, tuples, and dynamic elements such as <code>Bytes</code>.</li>
+<li><code>std::abi::ArrayView</code> is a lazy view of a Solidity <code>T[]</code> in calldata. It
+validates offsets and lengths like a Solidity <code>T[] calldata</code> parameter and
+decodes elements one at a time, so raw-selector <code>recv</code> arms can read large
+arrays without decoding them into memory.</li>
+<li>Enums with a <code>SolCompat</code> implementation can be <code>msg</code> fields.</li>
+<li>Generated JSON ABIs no longer list Solidity's built-in <code>Error</code> and <code>Panic</code>,
+so ethers can load contracts with panic paths.</li>
+</ul>
+<h2 id="standard-library">Standard library</h2>
+<p>Beyond storage and ABI, the standard library gains many modules that port
+well-known Solidity libraries. Most are written to match the behavior of their
+OpenZeppelin or Solady counterparts exactly.</p>
+<p>For EVM applications:</p>
+<ul>
+<li><code>std::evm::signature</code>: ECDSA recovery (including EIP-2098 compact
+signatures) and ERC-1271 checks with OpenZeppelin <code>SignatureChecker</code>
+semantics.</li>
+<li><code>std::evm::eip712</code>: domain separators and digests, with a <code>Domain</code> type that
+caches the separator like OpenZeppelin's <code>EIP712</code>.</li>
+<li><code>std::evm::multicall</code>: the counterpart of OpenZeppelin's <code>Multicall</code>.</li>
+<li><code>std::evm::erc4337</code>: building blocks for ERC-4337 accounts and paymasters on
+EntryPoint v0.7 and v0.8.</li>
+<li><code>std::evm::rlp</code>: RLP encoding and decoding.</li>
+<li><code>std::evm::random</code>: pseudorandom numbers as an effect, after Solady's
+<code>LibPRNG</code>. Tests can substitute a <code>ReplayRng</code> to drive code to specific
+outcomes.</li>
+<li>Revert helpers such as <code>bubble_revert_or</code>, <code>decode_error_string</code>, and
+<code>decode_panic</code>, and <code>ReturnData</code> for reading returndata in place.</li>
+<li><code>init_code_hash&lt;C&gt;(args)</code> and <code>predict_create2&lt;C&gt;(deployer, args, salt)</code> for
+predicting the address of a contract deployed with <code>create2&lt;C&gt;</code>.</li>
+</ul>
+<p>For general-purpose code:</p>
+<ul>
+<li><code>core::fixed</code> provides decimal fixed-point numbers with the scale in the
+type: <code>UFixed&lt;D&gt;</code>, <code>Fixed&lt;D&gt;</code>, and the aliases <code>Wad</code>, <code>Ray</code>, and <code>SWad</code>.
+Mixing scales, as in <code>Wad * Ray</code>, is a type error. The 18-decimal types port
+Solady's <code>expWad</code>, <code>lnWad</code>, and <code>powWad</code> bit for bit.</li>
+<li><code>core::sort</code> provides sorting and searching after Solady's <code>LibSort</code>,
+generic over both the container and the element.</li>
+<li><code>MemVec&lt;T&gt;</code> is now a growable in-memory array for any element type.</li>
+<li><code>core::mem::replace</code> and <code>core::mem::take</code> move a value out of a place
+while leaving another one behind.</li>
+<li><code>core::text</code> can parse numbers (<code>parse_uint</code>, <code>parse_int</code>,
+<code>parse_hex_uint</code>) and decode base64 and base58; <code>std::evm::parse_address</code>
+parses addresses.</li>
+<li><code>core::num::gcd</code> computes the greatest common divisor.</li>
+</ul>
+<p>Fixed-point arithmetic and sorting, for example, look like this:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> core</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">fixed</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">Wad</span></span>
+<span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> core</span><span style="color: #F97583;">::</span><span>sort</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">const</span><span style="color: #B392F0;"> FEE</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Wad</span><span style="color: #F97583;"> =</span><span style="color: #B392F0;"> Wad</span><span style="color: #F97583;">::</span><span>from_ratio(3, 1000)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>#[test]</span></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span> fixed_point() {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    let</span><span> fee </span><span style="color: #F97583;">=</span><span style="color: #B392F0;"> Wad</span><span style="color: #F97583;">::</span><span>from_int(250)</span><span style="color: #F97583;"> *</span><span style="color: #B392F0;"> FEE</span></span>
+<span class="giallo-l"><span>    assert</span><span style="color: #F97583;">!</span><span>(fee </span><span style="color: #F97583;">==</span><span style="color: #B392F0;"> Wad</span><span style="color: #F97583;">::</span><span>from_ratio(3, 4))</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>#[test]</span></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span> sorting() {</span></span>
+<span class="giallo-l"><span>    var xs</span><span style="color: #F97583;">:</span><span> [u256;</span><span style="color: #79B8FF;"> 6</span><span>]</span><span style="color: #F97583;"> =</span><span> [</span><span style="color: #79B8FF;">42</span><span>,</span><span style="color: #79B8FF;"> 7</span><span>,</span><span style="color: #79B8FF;"> 19</span><span>,</span><span style="color: #79B8FF;"> 7</span><span>,</span><span style="color: #79B8FF;"> 3</span><span>,</span><span style="color: #79B8FF;"> 100</span><span>]</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    sort</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">sort</span><span>(</span><span style="color: #F97583;">mut</span><span> xs)</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    assert!</span><span>(xs</span><span style="color: #F97583;"> ==</span><span> [</span><span style="color: #79B8FF;">3</span><span>,</span><span style="color: #79B8FF;"> 7</span><span>,</span><span style="color: #79B8FF;"> 7</span><span>,</span><span style="color: #79B8FF;"> 19</span><span>,</span><span style="color: #79B8FF;"> 42</span><span>,</span><span style="color: #79B8FF;"> 100</span><span>])</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    assert!</span><span>(</span><span style="color: #B392F0;">sort</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">binary_search</span><span>(xs,</span><span style="color: #79B8FF;"> 19</span><span>)</span><span style="color: #F97583;">.</span><span style="color: #B392F0;">unwrap</span><span>()</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 3</span><span>)</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>String literals longer than 31 bytes are now <code>DynString</code> values when their
+context doesn't fix a type, so <code>let reason = "a long revert reason ..."</code> just
+works.</p>
+<h2 id="native-executables-in-the-release-binaries">Native executables in the release binaries</h2>
+<p>As announced with 26.4, the release binaries now include the native backend.
+On x86-64 Linux and AArch64 macOS, the prebuilt <code>fe</code> can build host-native
+executables directly:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">pub fn</span><span style="color: #B392F0;"> main</span><span>()</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> i32</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    0</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre><pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #B392F0;">fe</span><span style="color: #9ECBFF;"> build</span><span style="color: #79B8FF;"> --backend</span><span style="color: #9ECBFF;"> native</span><span style="color: #79B8FF;"> --out-dir</span><span style="color: #9ECBFF;"> out hello.fe</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">./out/hello</span></span></code></pre>
+<p>Native executables are now the native backend's default output, so <code>--emit executable</code>
+is no longer needed. On the other release targets, the native backend is
+available for <code>--emit ir</code>. Native test suites also compile much faster, since
+they now share one runtime package across all modules.</p>
+<p>We are already using native Fe ourselves: the release notes for this release
+were assembled by <a rel="external" href="https://github.com/fe-lang/eisenbote">eisenbote</a>, a
+replacement for the Python-based <a rel="external" href="https://towncrier.readthedocs.io/">towncrier</a>
+written in Fe and compiled with the native backend. It reads its settings with
+<a rel="external" href="https://github.com/fe-lang/lutz">lutz</a>, a TOML parser written in Fe, and
+produces the same bytes as towncrier, which its test suite checks by replaying
+all 38 Fe releases since 2021. Our release pipeline builds eisenbote with the
+compiler that is about to be released, so every release now also compiles and
+runs a real native Fe program.</p>
+<p>The native backend is still experimental, but there are big improvements coming
+in the next release.</p>
+<p>This release also adds experimental compilation of Fe programs as SP1 RV64IM
+zkVM guests. It is not part of the release binaries; build the compiler from
+source with the <code>sp1</code> feature to try it.</p>
+<h2 id="gas-bytecode-size-and-compilation">Gas, bytecode size, and compilation</h2>
+<p>The Sonatina backend received several improvements that make contracts smaller
+and cheaper:</p>
+<ul>
+<li>Values are reordered on the EVM stack with the fewest swaps, and the backend
+reloads only the values it needs instead of spilling the whole stack. The
+eight contracts of a Fe port of Seaport shrink by 5.4% at <code>-O1</code>.</li>
+<li>Messages and errors are encoded in place after their selector instead of
+being encoded and then copied. The same Seaport contracts shrink by another
+1.7% at <code>-Os</code>.</li>
+<li>Loops end each iteration in one conditional branch. Verifying a 64-level
+Merkle proof drops from 11,428 to 10,718 gas.</li>
+<li>In the Ethereum deposit contract, <code>deposit</code> uses about 130 gas less, and the
+runtime shrinks from 2,360 to 2,281 bytes.</li>
+</ul>
+<p>These numbers come from the individual benchmarks; the effect on other
+contracts depends on how they use the affected operations.</p>
+<p>The compiler itself is faster too. The parser is about twice as fast, function
+bodies in <code>core</code> and <code>std</code> are only lowered when needed, and <code>fe test</code> compiles
+a file's tests in parallel. Running <code>fe test</code> on each of the compiler's 385
+test fixtures takes a quarter less time and half the CPU. Checking deeply
+nested generic types no longer takes exponential time.</p>
+<h2 id="other-fixes">Other fixes</h2>
+<p>A few more changes worth calling out:</p>
+<ul>
+<li>An operator after an <code>if</code>/<code>else</code> expression now applies to the whole
+conditional. In 26.4, <code>if c { 1 } else { 2 } + 3</code> was silently parsed as
+<code>if c { 1 } else { 2 + 3 }</code>.</li>
+<li>Code after an <code>if</code>/<code>else</code> chain is no longer skipped when the last branch
+diverges but an earlier one falls through.</li>
+<li>Several EVM memory miscompiles in optimized builds are fixed, including a
+buffer allocated before a loop reusing memory that the loop still reads.</li>
+<li>An <code>Address</code> can no longer hold bits above the low 160, so two addresses for
+the same account are always equal, the same map key, and the same event
+topic. Build one with <code>Address::new(word)</code> and read it with <code>address.word()</code>.</li>
+<li><code>Option&lt;T&gt;</code> is now <code>Copy</code> when <code>T</code> is, and <code>Result&lt;E, T&gt;</code> when both are.</li>
+<li>Import resolution no longer depends on the order of <code>use</code> items, and
+ambiguous names list every candidate.</li>
+<li><code>fe fmt</code> no longer drops <code>pub(ingot)</code> or <code>pub(super)</code>, attributes on <code>for</code>
+loops, or comments in certain positions.</li>
+<li>Find references, rename, and highlighting in the language server are much
+more accurate, and no longer edit the same reference twice.</li>
+</ul>
+<h2 id="upgrading-from-26-4">Upgrading from 26.4</h2>
+<p>Most existing code needs changes to build with 26.5. The most common ones:</p>
+<ul>
+<li>Replace <code>let mut x = ...</code> with <code>var x = ...</code>, and remove <code>ref</code> and <code>mut</code> from
+types. Fields can no longer hold references; pass accesses as parameters
+instead.</li>
+<li>Pass ETH amounts as <code>Wei</code> and timestamps as <code>Timestamp</code>, for example
+<code>value: Wei::zero()</code> instead of <code>value: 0</code>.</li>
+<li>Drop <code>SALT</code> parameters and <code>= _</code> layout defaults from storage collections,
+and pass collections as <code>mut</code> or view parameters. Declare transient fields
+as <code>TSlot&lt;T&gt;</code>.</li>
+<li>Build addresses with <code>Address::new(word)</code> instead of <code>Address { inner: .. }</code>.</li>
+<li>Collection lengths and indices are now <code>usize</code> instead of <code>u256</code>.</li>
+<li>Paired methods such as <code>span_mut</code> and <code>IndexMut</code> are replaced by single
+<code>mut?</code> methods and <code>mut Index</code> bounds.</li>
+<li>Wrap raw-pointer dereferences and calls to <code>unsafe fn</code> in <code>unsafe { .. }</code>.</li>
+</ul>
+<p>The <a rel="external" href="https://github.com/argotorg/fe/releases/tag/v26.5.0">release notes</a> list
+every removal, and the <a rel="external" href="https://fe-lang.org">Fe guide</a> has been updated for
+26.5.</p>
+<h2 id="try-it">Try it!</h2>
+<p><a rel="external" href="https://github.com/argotorg/fe/releases/tag/v26.5.0">Fe 26.5.0</a> is available
+now for Linux, macOS, and Windows. Let us know what you think!</p>
+<ul>
+<li><strong><a rel="external" href="https://fe-lang.org">fe-lang.org</a></strong></li>
+<li><strong><a rel="external" href="https://fe-lang.org/getting-started/first-contract/">Write your first contract</a></strong>: Get hands-on in minutes</li>
+<li><strong><a rel="external" href="https://fe-lang.zulipchat.com">Zulip</a></strong>: Join the conversation</li>
+</ul>
+
+        </section>
+
+        
+
+    </article>
+</main>
+
+
+    </div>
+</body>
+
+</html>
