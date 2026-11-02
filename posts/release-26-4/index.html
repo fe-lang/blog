@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    
+    
+    <title>
+        Fe 26.4 — updated for 26.4.1
+    </title>
+    
+
+    
+    
+
+    
+    
+        <link href=https://blog.fe-lang.org/fonts.css rel="stylesheet" />
+    
+        <!-- <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet"> -->
+
+    
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="ed2d919e-0e43-45d9-ac8a-7bed61075d36"></script>
+
+    
+    
+
+    
+    <link rel="alternate" type="application/atom+xml" title="" href="https://blog.fe-lang.org/atom.xml">
+
+    
+    
+    
+        <link rel="stylesheet" type="text/css" href="https://blog.fe-lang.org/theme/light.css"/>
+    
+
+    <link rel="stylesheet" type="text/css" media="screen" href=https://blog.fe-lang.org/main.css />
+
+
+    
+        
+            <link rel="stylesheet" href="https://blog.fe-lang.org/custom.css">
+        
+    
+</head>
+
+<body>
+    <div class="content">
+        <header>
+  <section class="nav">
+    <div>
+      <a href="https://fe-lang.org" class="no-border">
+        <img src="https:&#x2F;&#x2F;blog.fe-lang.org/fe-bare.svg" alt="Fe Programming Language">
+      </a>
+    </div>
+    <input id="menu-toggle" type="checkbox" />
+    <label class='menu-button-container' for="menu-toggle">
+      <div class='menu-button'></div>
+    </label>
+    <ul class="menu">
+      <li>
+        <a href="https://fe-lang.org/getting-started/what-is-fe/" class="a-non-active" title="Get started">Get started</a>
+      </li>
+      <li>
+        <a href="https://fe-lang.org/getting-started/key-concepts/" class="a-non-active" title="Learn">Learn</a>
+      </li>
+      <li>
+        <a href="https://fe-lang.zulipchat.com/join/dqvssgylulrmjmp2dx7vcbrq" class="a-non-active" title="Community">Community</a>
+      </li>
+      <li>
+        <a href="https:&#x2F;&#x2F;blog.fe-lang.org" class="a-active" title="Blog">Blog</a>
+      </li>
+    </ul>
+  </section>
+</header>
+
+        
+        
+    
+<main>
+    <article>
+        <div class="title">
+            
+            
+    <div class="page-header">
+        Fe 26.4 — updated for 26.4.1<span class="primary-color" style="font-size: 1.6em">.</span>
+    </div>
+
+
+            
+                <div class="meta">
+                    Posted on 2026-09-30
+
+                    
+                </div>
+            
+        </div>
+
+        
+
+        
+        
+
+        <section class="body">
+            <blockquote>
+<p><strong>Update (2026-09-30): Fe 26.4.1 supersedes 26.4.0.</strong>
+Shortly after releasing 26.4.0, we found that the borrow checker incorrectly
+rejected a common contract pattern: calling a mutable method on a contract
+field whose struct contains a <code>StorageMap</code> or <code>StorageBytes</code> alongside other
+fields. Fe 26.4.1 fixes this regression and includes additional borrow-checking
+fixes. Please use 26.4.1 when trying the features described below.</p>
+</blockquote>
+<p>The Fe team is happy to announce Fe 26.4, now available as Fe 26.4.1!</p>
+<p>This release improves borrow checking, adds an experimental native backend,
+and expands the standard library with helpers for Solidity storage layouts, external calls,
+text formatting, and full-precision arithmetic. It also improves ABI
+compatibility, fixes deterministic deployment, and reduces gas, bytecode size,
+and compilation time. Highlights are below; the release notes cover the
+<a rel="external" href="https://github.com/argotorg/fe/releases/tag/v26.4.0">26.4.0 features</a> and the
+<a rel="external" href="https://github.com/argotorg/fe/releases/tag/v26.4.1">26.4.1 fixes</a>.</p>
+<h2 id="fixes-in-26-4-1">Fixes in 26.4.1</h2>
+<p>The main reason for this patch is a borrow-checking regression that blocked
+valid contract logic. Calling a <code>mut self</code> method that uses a <code>StorageMap</code> or
+<code>StorageBytes</code> field could produce a false borrow conflict when the receiver
+was a contract field whose struct also contained other fields. This affected
+calls from <code>recv</code> handlers, for example. These calls are now accepted again.</p>
+<p>The patch also corrects ownership and borrow checking for compile-time constant
+values. Invalid repeated moves of non-<code>Copy</code> values and reads that conflict with
+a live mutable borrow are now rejected, as they already were for runtime
+values. Conversely, passing an unannotated string literal to a generic <code>own</code>
+parameter more than once no longer produces a false move conflict.</p>
+<p>All the features introduced in 26.4.0 and described below are included in
+26.4.1. If you installed 26.4.0, please upgrade to the patched release.</p>
+<h2 id="borrow-checking-improvements">Borrow checking improvements</h2>
+<p>Fe’s borrow checker now tracks ownership and borrows more precisely through
+tuples, structs, arrays, pointer aliases, and helper calls. Borrow information also follows references returned
+inside aggregates: returning a reference inside a tuple and then destructuring
+it no longer hides that reference from the borrow checker. Overlapping live
+borrows are rejected even when they reach the same value through different paths.</p>
+<p>The checker also rejects uses of moved non-<code>Copy</code> values through pointers,
+including pointers returned by calls and accesses to their fields or array
+elements. Ownership and borrow requirements on generic calls are checked when
+the concrete trait implementation is selected.</p>
+<h3 id="state-borrows-across-external-calls">State borrows across external calls</h3>
+<p>External calls can call back into a contract and access its state. Fe now
+accounts for that possibility when checking live borrows of persistent and
+transient state.</p>
+<p><code>CALL</code>, <code>DELEGATECALL</code>, <code>CREATE</code>, and <code>CREATE2</code> conflict with live state borrows.
+<code>STATICCALL</code> allows shared state borrows, but conflicts with mutable ones. Code
+that holds a conflicting borrow across one of these operations must end the
+borrow before making the call.</p>
+<h3 id="copies-and-pointer-access">Copies and pointer access</h3>
+<p>Several related fixes make ownership behave consistently:</p>
+<ul>
+<li>Copying an array returned by a function now creates an independent value.
+Modifying the copy no longer changes the original, including for nested arrays.</li>
+<li>Comparisons such as <code>a == b</code> borrow a non-<code>Copy</code> right-hand operand instead of
+moving it. Shared method calls on non-<code>Copy</code> fields also no longer falsely
+consume the field.</li>
+<li><code>FixedBytes&lt;N&gt;</code> now implements <code>Copy</code>, so values such as <code>Bytes32</code> can be reused
+without a move conflict.</li>
+<li>Fields and array elements reached through temporary pointers can be assigned,
+compound-assigned, and borrowed. Calls such as <code>(*f()).set(1)</code> now update the
+pointee instead of silently updating a copy.</li>
+</ul>
+<h2 id="experimental-native-executables">Experimental native executables</h2>
+<p>Fe can now compile programs to host-native executables on x86-64 Linux and
+AArch64 macOS. The native backend uses Cranelift and supports standalone files
+as well as whole workspaces with dependencies.</p>
+<p>Native support is not yet included in the published compiler binaries. To try
+it in Fe 26.4, you currently need to build the compiler from source with the
+<code>cranelift</code> feature enabled. Including native support in the published binaries
+is planned for Fe 26.5.</p>
+<p>A minimal program uses <code>pub fn main() -&gt; i32</code>, with the return value becoming
+the process exit code:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">pub fn</span><span style="color: #B392F0;"> main</span><span>()</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> i32</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    0</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>Save this as <code>hello.fe</code>, then build and run it:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #B392F0;">fe</span><span style="color: #9ECBFF;"> build</span><span style="color: #79B8FF;"> --backend</span><span style="color: #9ECBFF;"> native</span><span style="color: #79B8FF;"> --emit</span><span style="color: #9ECBFF;"> executable</span><span style="color: #79B8FF;"> --out-dir</span><span style="color: #9ECBFF;"> out hello.fe</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">./out/hello</span></span></code></pre>
+<p><code>fe test --backend native</code> also runs Fe tests as native executables. Reverts,
+including failed <code>assert!</code> calls with messages, trap on native targets.</p>
+<p>The standard library provides the beginnings of a host programming environment:</p>
+<ul>
+<li><code>std::io</code> provides character input and output.</li>
+<li>Programs can receive process arguments through
+<code>pub fn main(argc: i32, argv: **u8) -&gt; i32</code> and read them with the
+bounds-checked <code>std::native::Args</code> API.</li>
+<li><code>std::native::cpu_clock_ticks</code> exposes process CPU time.</li>
+<li><code>std::native::ByteBuffer</code> provides an explicitly owned heap byte buffer, with
+fallible growth that preserves existing data, zero initialization,
+overlap-safe copying, and an explicit <code>release</code> operation.</li>
+</ul>
+<p>This backend is experimental. Native references preserve their addresses and
+aliasing through aggregate fields, pointer slots, and helper returns. The
+compiler rejects loads of references from uninitialized or byte-overwritten
+slots; copying raw bytes into a slot does not establish a valid reference.</p>
+<h2 id="more-capable-const-functions">More capable const functions</h2>
+<p>Const functions can now borrow their own locals and parameters with <code>ref</code> and
+<code>mut</code>. Helpers that update a value in place, including helpers taking a <code>mut</code>
+argument, can therefore run during constant evaluation. Returning a borrow of a
+local from the function that owns it is rejected during evaluation.</p>
+<p>Const functions can also receive immutable trait providers through <code>uses</code> and
+supply them with <code>with</code>. This includes forwarding providers through generic
+const functions, calling const trait methods, and borrowing a provider for a
+<code>ref self</code> method call. Mutable effects, storage effects keyed by type, and
+extern functions with effects remain unsupported in const evaluation.</p>
+<p>Generic constants now handle array repeats with symbolic lengths and indices
+in branches, enum matches, casts, and type-level expressions. Bounds checks and
+assertion diagnostics are preserved when those constants are specialized.</p>
+<h2 id="solidity-storage-layouts">Solidity storage layouts</h2>
+<p>The new <code>std::evm::SolSlot</code> provides access to Solidity storage layouts at
+runtime-selected slots. Its <code>read</code> and <code>write</code> operations access a packed state
+variable at a byte offset without changing its neighbours. Supported values
+include booleans, addresses, all integer widths, and fixed bytes, including
+custom-width types such as <code>sol::Int24</code>.</p>
+<p><code>read_bytes</code>, <code>read_string</code>, <code>write_bytes</code>, and <code>write_string</code> use Solidity's
+storage representation for dynamic bytes and strings. <code>std::evm::SolMapping</code>
+derives Solidity-compatible mapping slots from a runtime root, including nested
+mappings. These APIs let code work with an existing Solidity layout directly.</p>
+<p>For example, a pool layout can pack an address, fee, and tick spacing into
+one slot. Each write specifies the field's byte offset:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> std</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">abi</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">sol</span><span style="color: #F97583;">::</span><span>{</span><span style="color: #B392F0;">Int24</span><span>,</span><span style="color: #B392F0;"> Uint24</span><span>}</span></span>
+<span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> std</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">evm</span><span style="color: #F97583;">::</span><span>{</span><span style="color: #B392F0;">Evm</span><span>,</span><span style="color: #B392F0;"> RawStorage</span><span>,</span><span style="color: #B392F0;"> SolSlot</span><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>#[test]</span></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span> packed_pool_parameters() uses (evm</span><span style="color: #F97583;">: mut</span><span style="color: #B392F0;"> Evm</span><span>) {</span></span>
+<span class="giallo-l"><span>    with (</span><span style="color: #B392F0;">RawStorage</span><span style="color: #F97583;"> =</span><span> evm) {</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">        // Solidity: address currency; uint24 fee; int24 tickSpacing;</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        let</span><span> slot </span><span style="color: #F97583;">=</span><span style="color: #B392F0;"> SolSlot</span><span style="color: #F97583;">::</span><span>at(7)</span></span>
+<span class="giallo-l"><span>        slot</span><span style="color: #F97583;">.</span><span>write(offset</span><span style="color: #F97583;">:</span><span> 0, value</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Address</span><span> { inner</span><span style="color: #F97583;">:</span><span> 0xabc })</span></span>
+<span class="giallo-l"><span>        slot</span><span style="color: #F97583;">.</span><span>write(offset</span><span style="color: #F97583;">:</span><span> 20, value</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Uint24</span><span> { val</span><span style="color: #F97583;">:</span><span> 3000 })</span></span>
+<span class="giallo-l"><span>        slot</span><span style="color: #F97583;">.</span><span>write(offset</span><span style="color: #F97583;">:</span><span> 23, value</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Int24</span><span> { val</span><span style="color: #F97583;">:</span><span> 60 })</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #6A737D;">        // Updating the fee leaves the neighbouring fields intact.</span></span>
+<span class="giallo-l"><span>        slot</span><span style="color: #F97583;">.</span><span>write(offset</span><span style="color: #F97583;">:</span><span> 20, value</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Uint24</span><span> { val</span><span style="color: #F97583;">:</span><span> 500 })</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        let</span><span> currency</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Address</span><span style="color: #F97583;"> =</span><span> slot</span><span style="color: #F97583;">.</span><span>read(offset</span><span style="color: #F97583;">:</span><span> 0)</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        let</span><span> fee</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Uint24</span><span style="color: #F97583;"> =</span><span> slot</span><span style="color: #F97583;">.</span><span>read(offset</span><span style="color: #F97583;">:</span><span> 20)</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        let</span><span> spacing</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Int24</span><span style="color: #F97583;"> =</span><span> slot</span><span style="color: #F97583;">.</span><span>read(offset</span><span style="color: #F97583;">:</span><span> 23)</span></span>
+<span class="giallo-l"><span>        assert</span><span style="color: #F97583;">!</span><span>(currency</span><span style="color: #F97583;">.</span><span>inner </span><span style="color: #F97583;">==</span><span> 0xabc)</span></span>
+<span class="giallo-l"><span>        assert</span><span style="color: #F97583;">!</span><span>(fee</span><span style="color: #F97583;">.</span><span>val </span><span style="color: #F97583;">==</span><span> 500)</span></span>
+<span class="giallo-l"><span>        assert</span><span style="color: #F97583;">!</span><span>(spacing</span><span style="color: #F97583;">.</span><span>val </span><span style="color: #F97583;">==</span><span> 60)</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre><h3 id="custom-storage-keys">Custom storage keys</h3>
+<p><code>StorageMap</code> now reserves its complete hashing buffer before calling a custom
+key encoder. Previously, an allocation made during encoding could overwrite
+part of the key being hashed.</p>
+<p>This changes the <code>StorageKey</code> interface: custom implementations must provide
+<code>encoded_len(self) -&gt; u256</code>, and <code>write_key</code> must return <code>()</code> instead of the
+encoded length. Custom-width Solidity integers now implement <code>StorageKey</code> too.</p>
+<h2 id="external-calls-and-token-helpers">External calls and token helpers</h2>
+<p><code>Call::try_call_into</code> and <code>Call::try_static_into</code> copy returndata into a
+caller-provided buffer, up to that buffer's capacity. This lets callers bound
+the amount of data copied even when a callee returns a very large payload.</p>
+<p><code>Call::call_with_min_gas</code> adds an EIP-150 gas-budget admission check, accounting
+for a caller reserve and prepaid input memory, with no automatic returndata
+copy. <code>Call::send_value</code> handles plain value transfers, and
+<code>Call::try_call_raw</code> forwards raw calldata.</p>
+<p>Static calls now only require a read-only <code>Call</code> effect, including bounded raw
+static calls. This preserves <code>view</code> mutability in the generated ABI.</p>
+<h3 id="handling-token-failures-explicitly">Handling token failures explicitly</h3>
+<p>Fe 26.3 added ERC-20 helpers that revert on failure. This release adds
+non-reverting helpers that return a classified <code>TokenCall</code> outcome: <code>Ok</code>,
+<code>Reverted</code>, <code>BadReturn</code>, or <code>NoCode</code>. Callers can inspect the result and raise
+their own errors.</p>
+<p>For example, a transfer helper can turn each failure category into a distinct
+application error. Here we use revert messages to keep the example small:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> std</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">evm</span><span style="color: #F97583;">::</span><span>{</span><span style="color: #B392F0;">Call</span><span>,</span><span style="color: #B392F0;"> Ctx</span><span>,</span><span style="color: #B392F0;"> TokenCall</span><span>, erc20}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span> transfer_or_revert(token</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Address</span><span>, receiver</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Address</span><span>, amount</span><span style="color: #F97583;">:</span><span> u256)</span></span>
+<span class="giallo-l"><span>uses (call</span><span style="color: #F97583;">: mut</span><span style="color: #B392F0;"> Call</span><span>, ctx</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Ctx</span><span>) {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    match</span><span style="color: #B392F0;"> erc20</span><span style="color: #F97583;">::</span><span>try_transfer(token, receiver, amount) {</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">        TokenCall</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">Ok</span><span style="color: #F97583;"> =&gt;</span><span> {},</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">        TokenCall</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">Reverted</span><span style="color: #F97583;"> =&gt;</span><span> assert</span><span style="color: #F97583;">!</span><span>(false, &quot;</span><span style="color: #B392F0;">Token</span><span> transfer reverted&quot;),</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">        TokenCall</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">BadReturn</span><span style="color: #F97583;"> =&gt;</span><span> assert</span><span style="color: #F97583;">!</span><span>(false, &quot;</span><span style="color: #B392F0;">Token</span><span> returned failure&quot;),</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">        TokenCall</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">NoCode</span><span style="color: #F97583;"> =&gt;</span><span> assert</span><span style="color: #F97583;">!</span><span>(false, &quot;</span><span style="color: #B392F0;">Token</span><span> address has no code&quot;),</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>The new helpers cover:</p>
+<ul>
+<li>ERC-20: <code>try_transfer</code>, <code>try_transfer_from</code>, and <code>try_approve</code>, with a bounded
+32-byte returndata copy.</li>
+<li>ERC-721: <code>try_transfer_from</code>.</li>
+<li>ERC-1155: <code>try_safe_transfer_from</code> and <code>try_safe_batch_transfer_from</code>.</li>
+</ul>
+<p><code>erc721::check_on_received</code> also classifies the result of an <code>onERC721Received</code>
+hook. The new <code>std::evm::erc165</code> module provides interface checks matching
+OpenZeppelin's <code>ERC165Checker</code> semantics.</p>
+<h2 id="deterministic-deployment-and-minimal-proxies">Deterministic deployment and minimal proxies</h2>
+<p>The initcode embedded by <code>create&lt;B&gt;</code> and <code>create2&lt;B&gt;</code> is now exactly the <code>B.bin</code>
+artifact produced by <code>fe build</code>. Previously, compiling <code>B</code> together with the
+embedding contract could change helper sharing and inlining, producing different
+bytes. A CREATE2 address calculated off-chain from <code>B.bin</code> could consequently
+differ from the address actually deployed.</p>
+<p>Each contract is now compiled independently and embedded as its final bytes.
+This also makes a contract's bytecode independent of other contracts declared
+in the same file.</p>
+<p><code>std::evm::create2_address</code> computes an address from a deployer, salt, and initcode
+hash. The new <code>std::evm::clones</code> module provides ERC-1167 minimal-proxy initcode,
+CREATE and CREATE2 deployment, and deterministic address prediction.</p>
+<h2 id="full-precision-arithmetic-and-merkle-proofs">Full-precision arithmetic and Merkle proofs</h2>
+<p><code>core::num</code> now provides <code>mul_div</code> and <code>mul_div_ceil</code>. Both calculate <code>a * b / d</code>
+using a 512-bit intermediate product, so multiplication can exceed <code>u256</code> as
+long as the final quotient fits. <code>mul_div</code> rounds down; <code>mul_div_ceil</code> rounds up.</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> core</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">num</span><span style="color: #F97583;">::</span><span>{mul_div, mul_div_ceil}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>#[test]</span></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span> full_precision_example() {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    let</span><span> scale</span><span style="color: #F97583;">:</span><span> u256 </span><span style="color: #F97583;">=</span><span> 1 </span><span style="color: #F97583;">&lt;&lt;</span><span> 200</span></span>
+<span class="giallo-l"><span>    assert</span><span style="color: #F97583;">!</span><span>(mul_div(scale, scale, scale)</span><span style="color: #F97583;"> ==</span><span> scale)</span></span>
+<span class="giallo-l"><span>    assert</span><span style="color: #F97583;">!</span><span>(mul_div(10, 10, 6)</span><span style="color: #F97583;"> ==</span><span> 16)</span></span>
+<span class="giallo-l"><span>    assert</span><span style="color: #F97583;">!</span><span>(mul_div_ceil(10, 10, 6)</span><span style="color: #F97583;"> ==</span><span> 17)</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>Division by zero or an overflowing quotient fails like checked arithmetic.
+<code>checked_mul_div</code> and <code>checked_mul_div_ceil</code> return <code>None</code> instead. <code>full_mul</code>
+exposes the full product, while <code>addmod</code> and <code>mulmod</code> are now also available
+through <code>core::num</code>.</p>
+<p><code>leading_zeros</code> and <code>trailing_zeros</code> count zero bits in a <code>u256</code>, returning 256
+for zero. Both work during constant evaluation. On EVM targets,
+<code>leading_zeros</code> uses the <code>CLZ</code> instruction; the native implementation uses a
+branch-free bit search.</p>
+<p>For Merkle proofs, <code>std::evm::merkle</code> supports both OpenZeppelin-compatible
+sorted-pair trees and positional proofs, such as those used in Seaport bulk
+order signatures. Proofs are read in place from a <code>MemSlice&lt;u256&gt;</code> or a decoded
+<code>DynArray&lt;Bytes32&gt;</code> / <code>DynArray&lt;u256&gt;</code>.</p>
+<p>For an allowlist or airdrop, the verification step takes a proof, a trusted
+root, and the leaf hash. This small test builds a two-leaf tree and checks both
+a valid leaf and one that is not in the tree:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> std</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">abi</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">MemVec</span></span>
+<span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> std</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">evm</span><span style="color: #F97583;">::</span><span>{keccak_words, merkle}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>#[test]</span></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span> verify_two_leaf_tree() {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    let</span><span> leaf </span><span style="color: #F97583;">=</span><span> keccak_words([1])</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    let</span><span> sibling </span><span style="color: #F97583;">=</span><span> keccak_words([2])</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    let</span><span> root </span><span style="color: #F97583;">=</span><span style="color: #B392F0;"> merkle</span><span style="color: #F97583;">::</span><span>hash_pair_sorted(leaf, sibling)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">    let mut</span><span> proof</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> MemVec</span><span>&lt;u256&gt;</span><span style="color: #F97583;"> =</span><span style="color: #B392F0;"> MemVec</span><span style="color: #F97583;">::</span><span>zeroed(1)</span></span>
+<span class="giallo-l"><span>    proof</span><span style="color: #F97583;">.</span><span>set(index</span><span style="color: #F97583;">:</span><span> 0, value</span><span style="color: #F97583;">:</span><span> sibling)</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    let</span><span> proof </span><span style="color: #F97583;">=</span><span> proof</span><span style="color: #F97583;">.</span><span>to_dyn_array()</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    assert</span><span style="color: #F97583;">!</span><span>(</span><span style="color: #B392F0;">merkle</span><span style="color: #F97583;">::</span><span>verify(proof, root, leaf))</span></span>
+<span class="giallo-l"><span>    assert</span><span style="color: #F97583;">!</span><span>(</span><span style="color: #F97583;">!</span><span style="color: #B392F0;">merkle</span><span style="color: #F97583;">::</span><span>verify(proof, root, leaf</span><span style="color: #F97583;">:</span><span> keccak_words([3])))</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>In a contract, the root would come from the application's trusted state and the
+leaf would be derived from the claim using the same encoding as the tree builder.
+The proof can be passed directly as a decoded ABI array.</p>
+<h2 id="text-formatting-and-hashing">Text formatting and hashing</h2>
+<p>The new <code>core::text</code> module, also available as <code>std::text</code>, builds <code>DynString</code>
+values with <code>concat</code>, <code>decimal</code>, <code>hex</code>, <code>hex_upper</code>, and <code>base64</code>. <code>concat_slice</code>
+accepts a runtime-length slice of strings, while <code>TextBuilder</code> supports
+incremental text construction that preserves the input bytes.</p>
+<p><code>DynString</code> gains <code>slice</code>, <code>from_word_prefix</code>, and <code>zeroed</code>, and both <code>Bytes</code> and
+<code>DynString</code> now implement <code>Eq</code>. String literal escapes such as <code>\n</code>, <code>\t</code>, and
+<code>\"</code> are decoded correctly instead of being kept verbatim; invalid escapes
+produce source diagnostics.</p>
+<p>For EVM-specific formatting and hashing:</p>
+<ul>
+<li><code>std::evm::checksum_address</code> formats ERC-55 checksummed addresses.</li>
+<li><code>std::evm::keccak_words</code> hashes a fixed list of words.</li>
+<li><code>encode_packed</code> and <code>keccak_packed</code> write values directly at their packed
+widths, making them about four times cheaper. Custom-width Solidity integers now support packed encoding too.</li>
+<li>String literals longer than 31 bytes can be used as tuple parts in
+<code>core::keccak</code>, <code>std::abi::sol</code>, and <code>std::io::write</code> / <code>writeln</code> arguments.</li>
+</ul>
+<h2 id="abi-compatibility">ABI compatibility</h2>
+<p>Message variants returning tuples with dynamic elements now encode them as a
+Solidity parameter list. For example, <code>-&gt; (DynString, Bytes32, Address)</code> matches
+Solidity's <code>returns (string, bytes32, address)</code>, without an extra leading offset
+for a single enclosing tuple.</p>
+<p>Typed calls and <code>std::abi::sol::decode_output</code> use the same convention, and the
+JSON ABI lists one output per tuple element. This changes the returndata of
+dynamic tuple returns. Static tuples keep the same bytes; a single dynamic
+return or an <code>#[abi]</code> struct is unchanged.</p>
+<p>Generated JSON ABIs now include reachable custom errors, including errors
+raised through <code>Result::unwrap()</code> and overloaded operators. Event entries
+include <code>"anonymous": false</code> for strict consumers such as Foundry's Alloy parser,
+and call-local memory effects alone no longer prevent a function from being
+marked <code>pure</code>.</p>
+<p>The decoder accepts dynamic bytes and strings without trailing padding while
+preserving bounded reads and copies. Overflowing offsets and lengths revert
+with empty data instead of arithmetic panics. Payable handlers with return
+values and events with no fields also compile correctly.</p>
+<h2 id="gas-bytecode-size-and-compilation">Gas, bytecode size, and compilation</h2>
+<p><code>DynArray::get</code> now reuses the frame validation performed when the array was
+constructed. Bounds checks and canonical-value validation remain in place.
+In the Merkle proof benchmark reported in the changelog, this cuts gas for a
+16-sibling proof by about 46% and runtime bytecode by about 28%.</p>
+<p>Constant strings are now folded during ABI encoding instead of having their
+length calculated at runtime. In the reported ERC-20 benchmark, runtime bytecode
+shrinks by about 21%, and gas for <code>name()</code> drops from 3,861 to 857. These numbers
+come from the individual benchmarks; the effect on other contracts depends on
+how they use the affected operations.</p>
+<p>Helpers reached from multiple <code>recv</code> arms or modules are now emitted once
+instead of once per caller. The compiler also caches and shares more work in
+semantic analysis, trait solving, and borrow checking.</p>
+<p>Parsing deeply nested generic arguments is much faster. Previously, resolving
+the ambiguity between generic arguments and shift operators repeatedly parsed
+the same nested syntax. Reusing those results reduces a reported 12-level case
+from about 96 seconds to milliseconds, including similar incomplete syntax
+encountered while editing.</p>
+<h2 id="other-fixes-and-diagnostics">Other fixes and diagnostics</h2>
+<p>A few more changes worth calling out:</p>
+<ul>
+<li><code>continue</code> in a <code>for</code> loop now advances to the next element instead of
+revisiting the same one.</li>
+<li>Recursive pointer types such as <code>struct Node { value: u256, next: *Node }</code>
+now compile successfully.</li>
+<li>Bare function names inside an <code>impl</code> or <code>trait</code> resolve to module-level
+functions. Use <code>Self::name(...)</code> or <code>self.name(...)</code> to call an associated
+function or method; associated constants remain usable unqualified.</li>
+<li>Generic defaults, associated types inherited from supertraits, and generic
+arguments beginning with qualified paths resolve more reliably. Malformed
+<code>sol("...")</code> selector signatures now produce <code>fe check</code> errors.</li>
+<li>Integer expression literals larger than 256 bits are rejected instead of
+being silently truncated during EVM lowering.</li>
+<li><code>core::panic_code</code> and the <code>core::panics::PANIC_*</code> constants expose standard
+Solidity panic codes. Out-of-bounds <code>core::ptr</code> accesses now revert with
+<code>Panic(0x32)</code> instead of <code>INVALID</code>.</li>
+<li><code>fe test</code> and the contract test harness now use Osaka rules, matching the
+compiler's EVM target, so instructions such as <code>CLZ</code> execute in tests. The
+Osaka per-transaction gas cap is lifted for tests.</li>
+</ul>
+<h2 id="try-it">Try it!</h2>
+<p><a rel="external" href="https://github.com/argotorg/fe/releases/tag/v26.4.1">Fe 26.4.1</a> is available
+now for Linux, macOS, and Windows and replaces 26.4.0. Let us know what you think!</p>
+<ul>
+<li><strong><a rel="external" href="https://fe-lang.org">fe-lang.org</a></strong></li>
+<li><strong><a rel="external" href="https://fe-lang.org/getting-started/first-contract/">Write your first contract</a></strong>: Get hands-on in minutes</li>
+<li><strong><a rel="external" href="https://fe-lang.zulipchat.com">Zulip</a></strong>: Join the conversation</li>
+</ul>
+
+        </section>
+
+        
+
+    </article>
+</main>
+
+
+    </div>
+</body>
+
+</html>

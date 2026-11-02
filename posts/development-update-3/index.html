@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    
+    
+    <title>
+        Fe Development Update #3
+    </title>
+    
+
+    
+    
+
+    
+    
+        <link href=https://blog.fe-lang.org/fonts.css rel="stylesheet" />
+    
+        <!-- <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet"> -->
+
+    
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="ed2d919e-0e43-45d9-ac8a-7bed61075d36"></script>
+
+    
+    
+
+    
+    <link rel="alternate" type="application/atom+xml" title="" href="https://blog.fe-lang.org/atom.xml">
+
+    
+    
+    
+        <link rel="stylesheet" type="text/css" href="https://blog.fe-lang.org/theme/light.css"/>
+    
+
+    <link rel="stylesheet" type="text/css" media="screen" href=https://blog.fe-lang.org/main.css />
+
+
+    
+        
+            <link rel="stylesheet" href="https://blog.fe-lang.org/custom.css">
+        
+    
+</head>
+
+<body>
+    <div class="content">
+        <header>
+  <section class="nav">
+    <div>
+      <a href="https://fe-lang.org" class="no-border">
+        <img src="https:&#x2F;&#x2F;blog.fe-lang.org/fe-bare.svg" alt="Fe Programming Language">
+      </a>
+    </div>
+    <input id="menu-toggle" type="checkbox" />
+    <label class='menu-button-container' for="menu-toggle">
+      <div class='menu-button'></div>
+    </label>
+    <ul class="menu">
+      <li>
+        <a href="https://fe-lang.org/getting-started/what-is-fe/" class="a-non-active" title="Get started">Get started</a>
+      </li>
+      <li>
+        <a href="https://fe-lang.org/getting-started/key-concepts/" class="a-non-active" title="Learn">Learn</a>
+      </li>
+      <li>
+        <a href="https://fe-lang.zulipchat.com/join/dqvssgylulrmjmp2dx7vcbrq" class="a-non-active" title="Community">Community</a>
+      </li>
+      <li>
+        <a href="https:&#x2F;&#x2F;blog.fe-lang.org" class="a-active" title="Blog">Blog</a>
+      </li>
+    </ul>
+  </section>
+</header>
+
+        
+        
+    
+<main>
+    <article>
+        <div class="title">
+            
+            
+    <div class="page-header">
+        Fe Development Update #3<span class="primary-color" style="font-size: 1.6em">.</span>
+    </div>
+
+
+            
+                <div class="meta">
+                    Posted on 2021-02-10
+
+                    
+                </div>
+            
+        </div>
+
+        
+
+        
+        
+
+        <section class="body">
+            <p>Howdy, this is our first development update in 2021. We would once again like to keep you up to date about all the progress that happened since <a href="/posts/development-update-2/">the previous update</a>.</p>
+<h2 id="we-shipped-v0-1-0-alpha-amethyst">We shipped v0.1.0-alpha "Amethyst"</h2>
+<p>Earlier this year, we landed our first alpha release with binaries for Linux and Mac. If you are as excited about Fe as we are, you might want to grab a binary from <a rel="external" href="https://github.com/ethereum/fe/releases/tag/v0.1.0-alpha">here</a> and play with some examples.</p>
+<p>What's especially exciting about this release is that it has kicked of a fixed release cycle that we have committed to. From now on, we'll be shipping one release per month.</p>
+<p>Just keep in mind that these are all <strong>alpha</strong> releases and are not supposed to be used for real world development just yet. Fe still has a long way to go before it can be used in production, but the pace of development is promising.</p>
+<h2 id="more-user-defined-types">More user-defined types</h2>
+<p>We now support two new type definitions -- structs and contracts.</p>
+<h3 id="structs">Structs</h3>
+<p>Structs are a group of named variables in one segment of memory. They help with writing organized and efficient code.</p>
+<p>For now, Fe only supports structs consisting of base types, this will be changed to include all types in a later version.</p>
+<p>Example usage of a struct:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="python"><span class="giallo-l"><span>struct House:</span></span>
+<span class="giallo-l"><span>    price: u256</span></span>
+<span class="giallo-l"><span>    size: u256</span></span>
+<span class="giallo-l"><span>    vacant:</span><span style="color: #79B8FF;"> bool</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>contract Foo:</span></span>
+<span class="giallo-l"><span>    pub</span><span style="color: #F97583;"> def</span><span style="color: #B392F0;"> bar</span><span>() -&gt; u256:</span></span>
+<span class="giallo-l"><span>        building: House</span><span style="color: #F97583;"> =</span><span> House(</span><span style="color: #79B8FF;">300</span><span>,</span><span style="color: #79B8FF;"> 500</span><span>, true)</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        assert</span><span> building.size</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 500</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        assert</span><span> building.price</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 300</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        assert</span><span> building.vacant</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>        building.vacant</span><span style="color: #F97583;"> =</span><span> false</span></span>
+<span class="giallo-l"><span>        building.price</span><span style="color: #F97583;"> =</span><span style="color: #79B8FF;"> 1</span></span>
+<span class="giallo-l"><span>        building.size</span><span style="color: #F97583;"> =</span><span style="color: #79B8FF;"> 2</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">        assert</span><span> building.vacant</span><span style="color: #F97583;"> ==</span><span> false</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        assert</span><span> building.price</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 1</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        assert</span><span> building.size</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 2</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        return</span><span> building.size</span></span>
+<span class="giallo-l"></span></code></pre>
+<p>Usage of structs in Fe is pretty run-of-the-mill, so we won't go into too much detail describing the code above.</p>
+<p>Further down the road, we intend to support function definitions on structs.</p>
+<h3 id="contracts">Contracts</h3>
+<p>Fe of course already allows you to define contracts, but it wasn't until recently that contracts became types in their own right.</p>
+<p>Now, if a contract definition is in the module scope, it can be used to conveniently deploy, load, and interact with contracts. Below is an example of a contract being loaded and called:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="python"><span class="giallo-l"><span>contract Foo:</span></span>
+<span class="giallo-l"><span>    event MyEvent:</span></span>
+<span class="giallo-l"><span>        my_num: u256</span></span>
+<span class="giallo-l"><span>        my_addrs: address[</span><span style="color: #79B8FF;">5</span><span>]</span></span>
+<span class="giallo-l"><span>        my_string: string11</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    pub</span><span style="color: #F97583;"> def</span><span style="color: #B392F0;"> emit_event</span><span>(</span></span>
+<span class="giallo-l"><span>        my_num: u256, </span></span>
+<span class="giallo-l"><span>        my_addrs: address[</span><span style="color: #79B8FF;">5</span><span>], </span></span>
+<span class="giallo-l"><span>        my_string: string11</span></span>
+<span class="giallo-l"><span>    ):</span></span>
+<span class="giallo-l"><span>        emit MyEvent(my_num, my_addrs, my_string)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>contract FooProxy:</span></span>
+<span class="giallo-l"><span>    pub</span><span style="color: #F97583;"> def</span><span style="color: #B392F0;"> call_emit_event</span><span>(</span></span>
+<span class="giallo-l"><span>        foo_address: address,</span></span>
+<span class="giallo-l"><span>        my_num: u256,</span></span>
+<span class="giallo-l"><span>        my_addrs: address[</span><span style="color: #79B8FF;">5</span><span>],</span></span>
+<span class="giallo-l"><span>        my_string: string11</span></span>
+<span class="giallo-l"><span>    ):</span></span>
+<span class="giallo-l"><span>        foo: Foo</span><span style="color: #F97583;"> =</span><span> Foo(foo_address)</span></span>
+<span class="giallo-l"><span>        foo.emit_event(my_num, my_addrs, my_string)</span></span></code></pre>
+<p>Here an address is being cast to an instance of <code>Foo</code> and called using the attributes of <code>foo</code>.</p>
+<p>We can also create new contracts, like so:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="python"><span class="giallo-l"><span>contract Foo:</span></span>
+<span class="giallo-l"><span>    pub</span><span style="color: #F97583;"> def</span><span style="color: #B392F0;"> get_my_num</span><span>() -&gt; u256:</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        return</span><span style="color: #79B8FF;"> 42</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>contract FooFactory:</span></span>
+<span class="giallo-l"><span>    pub</span><span style="color: #F97583;"> def</span><span style="color: #B392F0;"> create_foo</span><span>() -&gt; address:</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">        # value and salt</span></span>
+<span class="giallo-l"><span>        foo: Foo</span><span style="color: #F97583;"> =</span><span> Foo.create(</span><span style="color: #79B8FF;">0</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        return</span><span> address(foo)</span></span></code></pre><h2 id="introducing-to-mem-and-clone">Introducing <code>to_mem()</code> and <code>clone()</code></h2>
+<p>These two builtin functions have been added for convenience when dealing with reference types. Here we'll explain why they were added and how to use them.</p>
+<p>To understand what <code>clone()</code> does, consider the following example:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="python"><span class="giallo-l"><span>pub</span><span style="color: #F97583;"> def</span><span style="color: #B392F0;"> example</span><span>(my_array: u256[</span><span style="color: #79B8FF;">10</span><span>]):</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">    # assign my_array to another reference</span></span>
+<span class="giallo-l"><span>    second_reference: u256[</span><span style="color: #79B8FF;">10</span><span>]</span><span style="color: #F97583;"> =</span><span> my_array</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #6A737D;">    # Both variables point to the same section in memory</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    assert</span><span> my_array[</span><span style="color: #79B8FF;">3</span><span>]</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 5</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    assert</span><span> second_reference[</span><span style="color: #79B8FF;">3</span><span>]</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 5</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #6A737D;">    # Changing the 3rd item in second_reference also affects my_array</span></span>
+<span class="giallo-l"><span>    second_reference[</span><span style="color: #79B8FF;">3</span><span>]</span><span style="color: #F97583;"> =</span><span style="color: #79B8FF;"> 50</span></span>
+<span class="giallo-l"><span> </span></span>
+<span class="giallo-l"><span style="color: #F97583;">    assert</span><span> my_array[</span><span style="color: #79B8FF;">3</span><span>]</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 50</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    assert</span><span> second_reference[</span><span style="color: #79B8FF;">3</span><span>]</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 50</span></span></code></pre>
+<p>As you can see, assigning a reference type to another variable does not copy the underlying data, it only creates a second variable that points to the same place in memory. This may not be what we want, though. We may want two distinct copies of the underlying data. In these situations, we can use <code>clone()</code> to copy the value to a new segment of memory. This is demonstrated in the following example:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="python"><span class="giallo-l"><span>pub</span><span style="color: #F97583;"> def</span><span style="color: #B392F0;"> example2</span><span>(my_array: u256[</span><span style="color: #79B8FF;">10</span><span>]):</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">    # clone my_array into second_array</span></span>
+<span class="giallo-l"><span>    second_array: u256[</span><span style="color: #79B8FF;">10</span><span>]</span><span style="color: #F97583;"> =</span><span> my_array.clone()</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #6A737D;">    # Both variables hold identical data to begin with</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    assert</span><span> my_array[</span><span style="color: #79B8FF;">3</span><span>]</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 5</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    assert</span><span> second_array[</span><span style="color: #79B8FF;">3</span><span>]</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 5</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #6A737D;">    # But changing the 3rd item in second_array does NOT affect my_array</span></span>
+<span class="giallo-l"><span>    second_array[</span><span style="color: #79B8FF;">3</span><span>]</span><span style="color: #F97583;"> =</span><span style="color: #79B8FF;"> 50</span></span>
+<span class="giallo-l"><span> </span></span>
+<span class="giallo-l"><span style="color: #F97583;">    assert</span><span> my_array[</span><span style="color: #79B8FF;">3</span><span>]</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 5</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    assert</span><span> second_array[</span><span style="color: #79B8FF;">3</span><span>]</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 50</span></span></code></pre>
+<p>Now that we understand <code>clone()</code>, let's talk about <code>to_mem()</code> for a minute. In the first example, we said that <code>second_reference: u256[10] = my_array</code> creates a second reference to the same point in memory without copying the underlying data. This only works for reference types in <strong>memory</strong>, not <strong>storage</strong>. Consider this other example which <strong>won't compile</strong>.</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="python"><span class="giallo-l"><span>pub</span><span style="color: #F97583;"> def</span><span style="color: #B392F0;"> example4</span><span>():</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">    # THIS DOES NOT COMPILE</span></span>
+<span class="giallo-l"><span>    second_array: u256[</span><span style="color: #79B8FF;">10</span><span>]</span><span style="color: #F97583;"> =</span><span style="color: #79B8FF;"> self</span><span>.my_array</span></span></code></pre>
+<p>The reason this code 👆 doesn't compile is because Fe won't let variables hold mutable storage pointers. This is on purpose. State mutation should be explicit in Fe, so we limit the places where state mutation takes place to statements that begin with <code>self</code> (e.g. <code>self.my_array[1] = 1</code> or <code>self.mutate_me()</code>). If we were to have mutable storage pointers running around in variables, someone could mutate state in a statement like <code>my_array[42] = 26</code>, which can make the contract's behaviour difficult to understand.</p>
+<p><em>Note: For now, all storage pointers are considered mutable, so the assignment rule described above currently applies to all storage pointers. In future versions of Fe, we will likely add Rust-style variable mutability, making it possible to assign storage pointers (as long as they're immutable).</em></p>
+<p>There are of course instances, though, where one would like to assign data found in storage. Since the only assignable pointer location is memory, we must copy values from storage and into memory before assigning them. To accomplish this, we provide the builtin function <code>to_mem()</code>. The <code>to_mem()</code> function is similar to <code>clone()</code>, but is used to copy values that are in storage to memory.</p>
+<p>In the example below, we demonstrate how <code>to_mem()</code> can be used to pass an array held in storage into a function:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="python"><span class="giallo-l"><span>pub</span><span style="color: #F97583;"> def</span><span style="color: #B392F0;"> example3</span><span>():</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">    self</span><span>.my_function(</span><span style="color: #79B8FF;">self</span><span>.my_array.to_mem())</span></span></code></pre>
+<p>For more information about how we plan on dealing with pointer locations in Fe, checkout <a rel="external" href="https://github.com/ethereum/fe/issues/161">RFC #161</a>.</p>
+<hr />
+<p>Whew! This was a lot to unpack. Here are a few more contributions we'd like to mention:</p>
+<ul>
+<li>Support for compiling modules with multiple contracts (<a rel="external" href="https://github.com/ethereum/fe/pull/197">See PR#197</a>)</li>
+<li>Support for many builtin attributes (e.g. <code>block.timestamp</code>, <a rel="external" href="https://github.com/ethereum/fe/pull/208">See PR#208</a>)</li>
+<li>CLI output can be overwritten via <code>--overwrite</code> (<a rel="external" href="https://github.com/ethereum/fe/pull/206">See PR#206</a>)</li>
+<li>Support for static strings (e.g <code>val = "foo"</code>) (<a rel="external" href="https://github.com/ethereum/fe/pull/182">See PR#182</a>)</li>
+<li>Lots of fixes and type safety improvements</li>
+<li>A number of bugs have been identified by <a rel="external" href="https://github.com/agroce">Alex Groce</a> using <a rel="external" href="https://github.com/agroce/afl-compiler-fuzzer">afl-compiler-fuzzer</a></li>
+</ul>
+<p>If you like to learn more about these, reading the linked Pull Requests should be a good start.</p>
+<h2 id="what-s-next">What's next</h2>
+<p>We continue to work against our current target: Having a working Uniswap demo written in Fe. Building examples of real world Ethereum applications helps us to prioritize important features. If you are interested in tracking our progress you might want to checkout our <a rel="external" href="https://github.com/ethereum/fe/milestone/4">Uniswap demo milestone on Github</a>.</p>
+<h3 id="special-thanks">Special thanks</h3>
+<p>We would like to thank our new contributors Sean Billig, Volodymyr Lykhonis, Satyam Agrawal and Alex Groce who all did amazing work with their issues and pull requests that helped us move Fe forward.</p>
+
+        </section>
+
+        
+
+    </article>
+</main>
+
+
+    </div>
+</body>
+
+</html>
