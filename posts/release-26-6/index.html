@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    
+    
+    <title>
+        Fe 26.6.0
+    </title>
+    
+
+    
+    
+
+    
+    
+        <link href=https://blog.fe-lang.org/fonts.css rel="stylesheet" />
+    
+        <!-- <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet"> -->
+
+    
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="ed2d919e-0e43-45d9-ac8a-7bed61075d36"></script>
+
+    
+    
+
+    
+    <link rel="alternate" type="application/atom+xml" title="" href="https://blog.fe-lang.org/atom.xml">
+
+    
+    
+    
+        <link rel="stylesheet" type="text/css" href="https://blog.fe-lang.org/theme/light.css"/>
+    
+
+    <link rel="stylesheet" type="text/css" media="screen" href=https://blog.fe-lang.org/main.css />
+
+
+    
+        
+            <link rel="stylesheet" href="https://blog.fe-lang.org/custom.css">
+        
+    
+</head>
+
+<body>
+    <div class="content">
+        <header>
+  <section class="nav">
+    <div>
+      <a href="https://fe-lang.org" class="no-border">
+        <img src="https:&#x2F;&#x2F;blog.fe-lang.org/fe-bare.svg" alt="Fe Programming Language">
+      </a>
+    </div>
+    <input id="menu-toggle" type="checkbox" />
+    <label class='menu-button-container' for="menu-toggle">
+      <div class='menu-button'></div>
+    </label>
+    <ul class="menu">
+      <li>
+        <a href="https://fe-lang.org/getting-started/what-is-fe/" class="a-non-active" title="Get started">Get started</a>
+      </li>
+      <li>
+        <a href="https://fe-lang.org/getting-started/key-concepts/" class="a-non-active" title="Learn">Learn</a>
+      </li>
+      <li>
+        <a href="https://fe-lang.zulipchat.com/join/dqvssgylulrmjmp2dx7vcbrq" class="a-non-active" title="Community">Community</a>
+      </li>
+      <li>
+        <a href="https:&#x2F;&#x2F;blog.fe-lang.org" class="a-active" title="Blog">Blog</a>
+      </li>
+    </ul>
+  </section>
+</header>
+
+        
+        
+    
+<main>
+    <article>
+        <div class="title">
+            
+            
+    <div class="page-header">
+        Fe 26.6.0<span class="primary-color" style="font-size: 1.6em">.</span>
+    </div>
+
+
+            
+                <div class="meta">
+                    Posted on 2026-11-10
+
+                    
+                </div>
+            
+        </div>
+
+        
+
+        
+        
+
+        <section class="body">
+            <!-- Editorial note: release-day copy, based on the v26.6.0 tag
+(5b3f96af2ab10df11bf847551f4b81d1fe481110, 2026-11-10), compared with v26.5.1.
+All Fe examples were checked with a `--profile dist --features fe/cranelift`
+build of that commit; the native examples were built and run on x86-64 Linux.
+The "Performance" numbers are taken from the release notes. Confirm the
+platform artifacts and remove draft status before publishing. -->
+<p>The Fe team is happy to announce the release of Fe 26.6.0!</p>
+<p>With 26.5 we promised big improvements to the native backend, and this
+release delivers them. Native Fe programs can now print, read their arguments,
+work with files, run other programs, read the clock, and call into C or be
+called from it. Fe also gains destructors, so memory owners free what they
+hold, and a <code>HashMap</code> in the prelude. On the EVM, contract fields now pack
+into shared storage slots like Solidity state variables, and invalid array
+indices and enum tags revert with Solidity's panic codes. An experimental
+WebAssembly backend rounds off the release.</p>
+<p>Several of these changes are breaking, including storage layout changes; the
+<a href="https://blog.fe-lang.org/posts/release-26-6/#upgrading-from-26-5">upgrade notes</a> at the end summarize what existing code
+needs. Highlights are below; the full changelog is here:
+<a rel="external" href="https://github.com/argotorg/fe/releases/tag/v26.6.0">v26.6.0</a></p>
+<h2 id="native-programs">Native programs</h2>
+<p>Native programs now get their I/O as effects, in the same way that contracts
+get storage and calls. On a native target, a test or a top-level <code>pub fn main</code>
+takes its effects from the new root effect <code>std::native::Host</code>, so <code>main</code>
+simply lists what it needs in its <code>uses</code> clause. Here is a small program that
+counts the words in a file:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> std</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">abi</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">DynString</span></span>
+<span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> std</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">env</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">Args</span></span>
+<span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> std</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">fs</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">Fs</span></span>
+<span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> std</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">io</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">Stdout</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">pub fn</span><span> main()</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> i32</span><span> uses (out</span><span style="color: #F97583;">: mut</span><span style="color: #B392F0;"> Stdout</span><span>, args</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Args</span><span>, fs</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Fs</span><span>) {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    let</span><span> text </span><span style="color: #F97583;">= match</span><span> fs</span><span style="color: #F97583;">.</span><span>read(args</span><span style="color: #F97583;">.</span><span>get(1)) {</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">        Result</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">Ok</span><span>(text)</span><span style="color: #F97583;"> =&gt;</span><span> text,</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">        Result</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">Err</span><span>(error)</span><span style="color: #F97583;"> =&gt;</span><span> {</span></span>
+<span class="giallo-l"><span>            println</span><span style="color: #F97583;">!</span><span>(&quot;cannot read &quot;, args</span><span style="color: #F97583;">.</span><span>get(1), &quot;</span><span style="color: #F97583;">:</span><span> &quot;, error)</span></span>
+<span class="giallo-l"><span style="color: #F97583;">            return</span><span> 1</span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    var counts </span><span style="color: #F97583;">=</span><span style="color: #B392F0;"> HashMap</span><span>&lt;</span><span style="color: #B392F0;">DynString</span><span>, u256&gt;</span><span style="color: #F97583;">::</span><span>new()</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    for</span><span> line </span><span style="color: #F97583;">in</span><span> text</span><span style="color: #F97583;">.</span><span>span()</span><span style="color: #F97583;">.</span><span>lines() {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        for</span><span> word </span><span style="color: #F97583;">in</span><span> line</span><span style="color: #F97583;">.</span><span>split(b&#39; &#39;) {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">            if</span><span> word</span><span style="color: #F97583;">.</span><span>len()</span><span style="color: #F97583;"> &gt;</span><span> 0 {</span></span>
+<span class="giallo-l"><span>                counts</span><span style="color: #F97583;">.</span><span>get_or_insert(</span><span style="color: #B392F0;">DynString</span><span style="color: #F97583;">::</span><span>from_payload(source</span><span style="color: #F97583;">:</span><span> word), 0)</span><span style="color: #F97583;"> +=</span><span> 1</span></span>
+<span class="giallo-l"><span>            }</span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">    for</span><span> (</span><span style="color: #F97583;">ref</span><span> word, count)</span><span style="color: #F97583;"> in</span><span> counts</span><span style="color: #F97583;">.</span><span>entries() {</span></span>
+<span class="giallo-l"><span>        println</span><span style="color: #F97583;">!</span><span>(word, &quot;</span><span style="color: #F97583;">:</span><span> &quot;, count)</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>    0</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre><pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #B392F0;">fe</span><span style="color: #9ECBFF;"> build</span><span style="color: #79B8FF;"> --backend</span><span style="color: #9ECBFF;"> native</span><span style="color: #79B8FF;"> --out-dir</span><span style="color: #9ECBFF;"> out wordcount.fe</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">./out/wordcount</span><span style="color: #9ECBFF;"> notes.txt</span></span></code></pre>
+<p>A function that doesn't list <code>Fs</code> in its <code>uses</code> clause can't touch the file
+system, and a function that only lists <code>fs: Fs</code> can read files but not write
+them. The same goes for the other new capabilities:</p>
+<ul>
+<li><code>std::io</code> provides <code>Stdout</code>, <code>Stderr</code> and <code>Stdin</code>, along with the macros
+<code>print!</code>, <code>println!</code>, <code>eprint!</code>, <code>eprintln!</code> and <code>format!</code>. <code>write!</code> and
+<code>writeln!</code> append to an existing <code>MemBuffer</code>, and <code>StdinReader</code> reads
+standard input a byte or a line at a time.</li>
+<li><code>std::env</code> provides <code>Args</code> and <code>Env</code>, and <code>std::process</code> provides <code>Exit</code>.</li>
+<li><code>std::fs</code> reads, writes and appends to files, creates directories, and
+lists them. Failures return a <code>std::io::Error</code> that carries the host's
+<code>errno</code> and displays as the host's message, as in the example above.</li>
+<li><code>std::process</code> runs other programs. A <code>Command</code> sets the arguments,
+environment, directory, standard streams, and a timeout:
+<code>proc.output(Command::new("git").arg("status").stdout(Redirect::Capture))</code>.
+The resulting <code>Output</code> also reports the child's CPU time and peak memory.</li>
+<li><code>std::time</code> reads the monotonic clock and the wall clock.</li>
+</ul>
+<p><code>fs</code>, <code>process</code> and <code>time</code> are available on Linux and macOS. A program that
+asks for an effect its target doesn't provide, such as <code>Evm</code> on a native
+target or <code>Stdout</code> on the EVM, is now a type error. <code>pub fn main()</code> may also
+return nothing, in which case it exits with 0.</p>
+<p>Panics in native programs now print a message on stderr, such as
+<code>panicked: arithmetic overflow</code> or the message of an <code>assert!</code>, after
+flushing any output written before them. In 26.5 they stopped with a bare
+<code>SIGILL</code>. Native <code>fe test</code> also supports <code>#[test(should_revert)]</code> now.</p>
+<h3 id="working-with-c">Working with C</h3>
+<p>Fe and C code can now be linked together in both directions. A Fe <code>extern</code>
+function can be implemented in C or Rust and linked into an executable with
+<code>--link &lt;PATH&gt;</code> or <code>--link-lib &lt;NAME&gt;</code>. Calling an <code>extern</code> function requires
+an <code>unsafe</code> block, since nothing checks what foreign code does.</p>
+<p>Going the other way, <code>#[unsafe(export)]</code> makes a native build define a
+function with the C calling convention, and <code>--emit staticlib</code> writes a static
+library that C and Rust programs link like any other:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span>#[</span><span style="color: #F97583;">unsafe</span><span>(export)]</span></span>
+<span class="giallo-l"><span style="color: #F97583;">pub fn</span><span style="color: #B392F0;"> fe_gcd</span><span>(_ a</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> u64</span><span>, _ b</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> u64</span><span>)</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> u64</span><span> {</span></span>
+<span class="giallo-l"><span>    var x</span><span style="color: #F97583;"> =</span><span> a</span></span>
+<span class="giallo-l"><span>    var y</span><span style="color: #F97583;"> =</span><span> b</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    while</span><span> y</span><span style="color: #F97583;"> !=</span><span style="color: #79B8FF;"> 0</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        let</span><span> t</span><span style="color: #F97583;"> =</span><span> y</span></span>
+<span class="giallo-l"><span>        y</span><span style="color: #F97583;"> =</span><span> x</span><span style="color: #F97583;"> %</span><span> y</span></span>
+<span class="giallo-l"><span>        x</span><span style="color: #F97583;"> =</span><span> t</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>    x</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre><pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="c"><span class="giallo-l"><span style="color: #F97583;">#include</span><span style="color: #9ECBFF;"> &lt;stdint.h&gt;</span></span>
+<span class="giallo-l"><span style="color: #F97583;">#include</span><span style="color: #9ECBFF;"> &lt;stdio.h&gt;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">uint64_t</span><span style="color: #B392F0;"> fe_gcd</span><span>(</span><span style="color: #F97583;">uint64_t</span><span style="color: #FFAB70;"> a</span><span>,</span><span style="color: #F97583;"> uint64_t</span><span style="color: #FFAB70;"> b</span><span>);</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">int</span><span style="color: #B392F0;"> main</span><span>(</span><span style="color: #F97583;">void</span><span>) {</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    printf</span><span>(</span><span style="color: #9ECBFF;">&quot;</span><span style="color: #79B8FF;">%llu\n</span><span style="color: #9ECBFF;">&quot;</span><span>, (</span><span style="color: #F97583;">unsigned long long</span><span>)</span><span style="color: #B392F0;">fe_gcd</span><span>(</span><span style="color: #79B8FF;">1071</span><span>,</span><span style="color: #79B8FF;"> 462</span><span>));</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    return</span><span style="color: #79B8FF;"> 0</span><span>;</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre><pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #B392F0;">fe</span><span style="color: #9ECBFF;"> build</span><span style="color: #79B8FF;"> --backend</span><span style="color: #9ECBFF;"> native</span><span style="color: #79B8FF;"> --emit</span><span style="color: #9ECBFF;"> staticlib</span><span style="color: #79B8FF;"> --out-dir</span><span style="color: #9ECBFF;"> out gcd.fe</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">cc</span><span style="color: #9ECBFF;"> main.c out/libgcd.a</span><span style="color: #79B8FF;"> -o</span><span style="color: #9ECBFF;"> gcd</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">./gcd</span><span style="color: #6A737D;">   # prints 21</span></span></code></pre>
+<p><code>--emit object</code> writes a plain object file instead.</p>
+<h3 id="conditional-compilation-and-project-targets">Conditional compilation and project targets</h3>
+<p>Items and modules can be compiled conditionally with <code>#[cfg(..)]</code>, using
+<code>target = "evm"</code> or <code>"native"</code>, <code>target_os = "linux"</code> or <code>"macos"</code>, and
+<code>target_family = "unix"</code>:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span>#[cfg(target_os </span><span style="color: #F97583;">=</span><span style="color: #9ECBFF;"> &quot;linux&quot;</span><span>)]</span></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span style="color: #B392F0;"> platform</span><span>()</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> String</span><span>&lt;8&gt; {</span><span style="color: #9ECBFF;"> &quot;linux&quot;</span><span> }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>#[cfg(target_os </span><span style="color: #F97583;">=</span><span style="color: #9ECBFF;"> &quot;macos&quot;</span><span>)]</span></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span style="color: #B392F0;"> platform</span><span>()</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> String</span><span>&lt;8&gt; {</span><span style="color: #9ECBFF;"> &quot;macos&quot;</span><span> }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>#[cfg(target </span><span style="color: #F97583;">=</span><span style="color: #9ECBFF;"> &quot;evm&quot;</span><span>)]</span></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span style="color: #B392F0;"> platform</span><span>()</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> String</span><span>&lt;8&gt; {</span><span style="color: #9ECBFF;"> &quot;evm&quot;</span><span> }</span></span></code></pre>
+<p><code>#![cfg(..)]</code> at the top of a module applies to the whole module. A project
+can also set its target in <code>fe.toml</code> with <code>target = "native"</code>, so that
+<code>fe check</code>, <code>fe build</code>, <code>fe test</code> and the language server use it without
+passing <code>--backend</code> every time.</p>
+<h3 id="64-bit-usize">64-bit <code>usize</code></h3>
+<p>On native targets, including SP1, <code>usize</code>, <code>isize</code> and pointers are now 64
+bits wide. Before, they were 256-bit words, so every index, length and pointer
+took four machine words. A loop counting in <code>usize</code> now runs about 30 times
+faster, and a <code>MemVec</code> scan about 45 times faster.</p>
+<p>As a result, <code>as</code> casts must now be lossless on every target: <code>u32 as usize</code>
+and <code>usize as u256</code> still work, but <code>u256 as usize</code> or <code>usize as u64</code> are
+rejected. Use <code>downcast()</code>, <code>downcast_saturate()</code> or <code>downcast_unchecked()</code>
+instead.</p>
+<h2 id="destructors-and-owned-memory">Destructors and owned memory</h2>
+<p>Owned values are now destroyed exactly once, when their owner gives them up:
+at the end of a scope, when they are overwritten, or when a partial move
+leaves fields behind. <code>MemVec</code>, <code>MemArray</code>, <code>MemBuffer</code> and <code>FixedMemBuffer</code>
+free their allocations and destroy their elements, so on native targets
+memory no longer leaks and there is no <code>release</code> call to forget:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> core</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">MemVec</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">struct</span><span style="color: #B392F0;"> Tree</span><span> {</span></span>
+<span class="giallo-l"><span>    value</span><span style="color: #F97583;">:</span><span> u256,</span></span>
+<span class="giallo-l"><span>    children</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> MemVec</span><span>&lt;</span><span style="color: #B392F0;">Tree</span><span>&gt;,</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span> leaf(_ value</span><span style="color: #F97583;">:</span><span> u256)</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> Tree</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    Tree</span><span> { value, children</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> MemVec</span><span style="color: #F97583;">::</span><span>new() }</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span> sum(_ tree</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Tree</span><span>)</span><span style="color: #F97583;"> -&gt;</span><span> u256 {</span></span>
+<span class="giallo-l"><span>    var total </span><span style="color: #F97583;">=</span><span> tree</span><span style="color: #F97583;">.</span><span>value</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    for ref</span><span> child </span><span style="color: #F97583;">in</span><span> tree</span><span style="color: #F97583;">.</span><span>children {</span></span>
+<span class="giallo-l"><span>        total </span><span style="color: #F97583;">+=</span><span> sum(child)</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>    total</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>#[test]</span></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span> owned_trees() {</span></span>
+<span class="giallo-l"><span>    var root </span><span style="color: #F97583;">=</span><span> leaf(1)</span></span>
+<span class="giallo-l"><span>    var branch </span><span style="color: #F97583;">=</span><span> leaf(2)</span></span>
+<span class="giallo-l"><span>    branch</span><span style="color: #F97583;">.</span><span>children</span><span style="color: #F97583;">.</span><span>push(leaf(3))</span></span>
+<span class="giallo-l"><span>    root</span><span style="color: #F97583;">.</span><span>children</span><span style="color: #F97583;">.</span><span>push(branch)</span></span>
+<span class="giallo-l"><span>    root</span><span style="color: #F97583;">.</span><span>children</span><span style="color: #F97583;">.</span><span>push(leaf(4))</span></span>
+<span class="giallo-l"><span>    assert</span><span style="color: #F97583;">!</span><span>(sum(root)</span><span style="color: #F97583;"> ==</span><span> 10)</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">    // `root` and every node it holds are freed here.</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>As the example shows, a type can also contain itself through a generic type
+that stores its argument behind a pointer, such as <code>MemVec&lt;Tree&gt;</code>. The new
+<code>core::ptr::Box&lt;T&gt;</code> holds a single value in its own allocation.</p>
+<p>A type can release other resources in a <code>core::ops::Drop</code> implementation:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> core</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">ops</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">Drop</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">extern</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    fn</span><span> close(_ fd</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> i32</span><span>)</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> i32</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">struct</span><span style="color: #B392F0;"> File</span><span> {</span></span>
+<span class="giallo-l"><span>    fd</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> i32</span><span>,</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">impl</span><span style="color: #B392F0;"> Drop</span><span style="color: #F97583;"> for</span><span style="color: #B392F0;"> File</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    fn</span><span> drop(own </span><span style="color: #79B8FF;">self</span><span>) {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        let</span><span> _ </span><span style="color: #F97583;">= unsafe</span><span> { close(</span><span style="color: #79B8FF;">self</span><span style="color: #F97583;">.</span><span>fd) }</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p><code>core::mem::drop</code> destroys a value early, and <code>core::mem::forget</code> gives it up
+without destroying it. Operations that allocate gain fallible forms such as
+<code>MemVec::try_push</code>, <code>try_reserve</code> and <code>MemBuffer::try_new</code>.</p>
+<p><code>DynString</code>, <code>Bytes</code> and <code>DynArray</code> now own their allocations too. They are no
+longer <code>Copy</code>, so use <code>clone()</code> to get a second value, or a view parameter to
+read one without moving it. The
+<a rel="external" href="https://github.com/argotorg/fe/blob/master/docs/language/destruction.md">destruction guide</a>
+covers the rules in detail.</p>
+<h2 id="hashmap-and-text"><code>HashMap</code> and text</h2>
+<p><code>core::map::HashMap&lt;K, V&gt;</code> is a hash table in the prelude that owns its keys
+and values. <code>get</code> gives the value in place, <code>insert</code> and <code>remove</code> return the
+old value, and <code>get_or_insert</code> gives the entry's value for update, as in
+<code>counts.get_or_insert(word, 0) += 1</code> above. Lookups take any key type that the
+map's key compares with, so a map with <code>DynString</code> keys can be queried with a
+string literal or a span. A <code>for</code> loop visits the values, and <code>keys()</code> and
+<code>entries()</code> loop over keys and <code>(key, value)</code> pairs.</p>
+<p>Text processing has improved a lot as well. <code>MemSpan</code> gains <code>starts_with</code>,
+<code>ends_with</code>, <code>index_of</code>, <code>trim</code>, <code>split</code> and <code>lines</code>, and byte literals such
+as <code>b','</code> are <code>u8</code> values. The <code>core::text</code> parsers accept any text type,
+including process arguments, so <code>parse_uint(args.get(1))</code> parses an argument
+without copying it. Spans, buffers and arguments compare with strings, so
+<code>args.get(1) == "serve"</code> just works.</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> core</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">fixed</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">Wad</span></span>
+<span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> core</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">hash</span><span style="color: #F97583;">::</span><span>sha256_word</span></span>
+<span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> core</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">text</span><span style="color: #F97583;">::</span><span>decode_hex</span></span>
+<span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> std</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">abi</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">DynString</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>#[test]</span></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span> text_and_hashing() {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    let</span><span> price </span><span style="color: #F97583;">=</span><span style="color: #B392F0;"> Wad</span><span style="color: #F97583;">::</span><span>parse(&quot;1</span><span style="color: #F97583;">.</span><span>25&quot;)</span><span style="color: #F97583;">.</span><span>unwrap()</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    let</span><span> total </span><span style="color: #F97583;">=</span><span> price </span><span style="color: #F97583;">*</span><span style="color: #B392F0;"> Wad</span><span style="color: #F97583;">::</span><span>from_int(3)</span></span>
+<span class="giallo-l"><span>    assert</span><span style="color: #F97583;">!</span><span>(format</span><span style="color: #F97583;">!</span><span>(total)</span><span style="color: #F97583;"> ==</span><span> &quot;3</span><span style="color: #F97583;">.</span><span>75&quot;)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">    let</span><span> bytes </span><span style="color: #F97583;">=</span><span> decode_hex(&quot;0x00ff&quot;)</span><span style="color: #F97583;">.</span><span>unwrap()</span></span>
+<span class="giallo-l"><span>    assert</span><span style="color: #F97583;">!</span><span>(bytes</span><span style="color: #F97583;">.</span><span>len()</span><span style="color: #F97583;"> ==</span><span> 2)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">    let</span><span> row</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> DynString</span><span style="color: #F97583;"> =</span><span> &quot;alice, 30, berlin&quot;</span></span>
+<span class="giallo-l"><span>    var fields</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> usize</span><span style="color: #F97583;"> =</span><span> 0</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    for</span><span> field </span><span style="color: #F97583;">in</span><span> row</span><span style="color: #F97583;">.</span><span>span()</span><span style="color: #F97583;">.</span><span>split(&quot;, &quot;) {</span></span>
+<span class="giallo-l"><span>        fields </span><span style="color: #F97583;">+=</span><span> 1</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>    assert</span><span style="color: #F97583;">!</span><span>(fields </span><span style="color: #F97583;">==</span><span> 3)</span></span>
+<span class="giallo-l"><span>    assert</span><span style="color: #F97583;">!</span><span>(row</span><span style="color: #F97583;">.</span><span>span()</span><span style="color: #F97583;">.</span><span>starts_with(&quot;alice&quot;))</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">    let</span><span> abc</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> DynString</span><span style="color: #F97583;"> =</span><span> &quot;abc&quot;</span></span>
+<span class="giallo-l"><span>    assert</span><span style="color: #F97583;">!</span><span>(sha256_word(abc</span><span style="color: #F97583;">.</span><span>span())</span><span style="color: #F97583;"> ==</span><span> 0xba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad)</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>The example also shows other new pieces of the standard library:</p>
+<ul>
+<li><code>core::hash</code> provides streaming Keccak-256 and SHA-256 that hash borrowed
+bytes without allocating, on every target. On the EVM,
+<code>std::evm::crypto::sha256</code> still uses the cheaper precompile.</li>
+<li><code>UFixed::parse</code> and <code>Fixed::parse</code> read decimal text, and both types
+implement <code>Display</code>, writing the shortest exact text.</li>
+<li><code>core::text::decode_hex</code> decodes hex with or without a <code>0x</code> prefix.</li>
+</ul>
+<p>Also new: <code>MemSlice</code>, <code>MemArray</code> and <code>MemVec</code> have a <code>sort</code> method for
+elements of any <code>Ord</code> type, so a <code>MemVec&lt;DynString&gt;</code> can be sorted, and text
+is ordered as text. <code>MemSlice::as_chunks&lt;N&gt;()</code> views a slice as fixed-size
+arrays, <code>MemVec::swap_remove</code> removes an element in constant time, and
+<code>core::num</code> has generic byte order conversions and <code>leading_zeros</code> and
+<code>trailing_zeros</code> for every integer width.</p>
+<h2 id="packed-contract-fields">Packed contract fields</h2>
+<p>Consecutive contract fields that are narrower than a slot now share storage
+slots, the way Solidity packs state variables:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> std</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">abi</span><span style="color: #F97583;">::</span><span>sol</span></span>
+<span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> std</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">evm</span><span style="color: #F97583;">::</span><span>{</span><span style="color: #B392F0;">Address</span><span>,</span><span style="color: #B392F0;"> Ctx</span><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>msg </span><span style="color: #B392F0;">TokenMsg</span><span> {</span></span>
+<span class="giallo-l"><span>    #[selector </span><span style="color: #F97583;">=</span><span> sol(&quot;pause()&quot;)]</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    Pause</span><span>,</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">pub</span><span> contract </span><span style="color: #B392F0;">Token</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #6A737D;">    // These three fields share one storage slot, as in Solidity.</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    mut</span><span> owner</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Address</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    mut</span><span> paused</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> bool</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    mut</span><span> decimals</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> u8</span><span>,</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    mut</span><span> total_supply</span><span style="color: #F97583;">:</span><span> u256,</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    recv </span><span style="color: #B392F0;">TokenMsg</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">        Pause</span><span> uses (ctx</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Ctx</span><span>, owner,</span><span style="color: #F97583;"> mut</span><span> paused) {</span></span>
+<span class="giallo-l"><span>            assert</span><span style="color: #F97583;">!</span><span>(ctx</span><span style="color: #F97583;">.</span><span>caller()</span><span style="color: #F97583;"> ==</span><span> owner)</span></span>
+<span class="giallo-l"><span>            paused </span><span style="color: #F97583;">=</span><span> true</span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>A packed field is read and written in place, leaving the rest of its slot
+alone. Inside structs, tuples and map entries, Solidity value types now pack
+as well: <code>Address</code> takes 20 bytes, <code>FixedBytes&lt;N&gt;</code> takes <code>N</code>, odd-width
+integers such as <code>Uint24</code> take their width, and a struct with a single field
+packs like that field. <code>struct Rec { owner: Address, flag: bool, stamp: u64 }</code>
+takes one slot, as it does in Solidity.</p>
+<p>Note that this moves existing fields to new slots and offsets, so a contract
+compiled with 26.6 doesn't share a storage layout with the same source
+compiled by 26.5. The same is true for <code>StoragePackedArray</code>, which could write
+outside the array for very large indices. It now places its words like
+Solady's <code>LibMap</code> and OpenZeppelin's <code>BitMaps</code>.</p>
+<h2 id="solidity-panic-codes">Solidity panic codes</h2>
+<p>More failures now revert with the same panic codes as Solidity, so tools and
+callers can tell them apart:</p>
+<ul>
+<li>An out-of-range array index reverts with <code>Panic(0x32)</code> instead of reverting
+without data.</li>
+<li>Reading an enum from storage, calldata or memory whose tag names no variant
+reverts with <code>Panic(0x21)</code>. It used to reach an <code>INVALID</code> instruction, which
+consumes all remaining gas.</li>
+<li>Division and remainder by zero in unchecked code panic with <code>Panic(0x12)</code>,
+as they already did in checked code, instead of returning zero.</li>
+</ul>
+<h2 id="language-improvements">Language improvements</h2>
+<p><code>loop { .. }</code> repeats its body until a <code>break</code>, and a <code>loop</code> or <code>while true</code>
+that never breaks is known to never complete, so a function can end in one
+without a <code>core::panic()</code> after it. <code>Option&lt;T&gt;</code> compares with <code>==</code> when <code>T</code>
+does:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> std</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">abi</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">DynString</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span> first_digit(_ text</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> DynString</span><span>)</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> Option</span><span>&lt;</span><span style="color: #B392F0;">u8</span><span>&gt; {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    for</span><span> byte </span><span style="color: #F97583;">in</span><span> text</span><span style="color: #F97583;">.</span><span>span() {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        if</span><span> byte </span><span style="color: #F97583;">&gt;=</span><span> b&#39;0&#39; </span><span style="color: #F97583;">&amp;&amp;</span><span> byte </span><span style="color: #F97583;">&lt;=</span><span> b&#39;9&#39; {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">            return</span><span style="color: #B392F0;"> Option</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">Some</span><span>(byte </span><span style="color: #F97583;">-</span><span> b&#39;0&#39;)</span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    Option</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">None</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span> collatz_steps(_ start</span><span style="color: #F97583;">:</span><span> u256)</span><span style="color: #F97583;"> -&gt;</span><span> u256 {</span></span>
+<span class="giallo-l"><span>    var n </span><span style="color: #F97583;">=</span><span> start</span></span>
+<span class="giallo-l"><span>    var steps </span><span style="color: #F97583;">=</span><span> 0</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    loop</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        if</span><span> n </span><span style="color: #F97583;">==</span><span> 1 {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">            return</span><span> steps</span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span>        n </span><span style="color: #F97583;">= if</span><span> n </span><span style="color: #F97583;">%</span><span> 2 </span><span style="color: #F97583;">==</span><span> 0 { n </span><span style="color: #F97583;">/</span><span> 2 }</span><span style="color: #F97583;"> else</span><span> { 3 </span><span style="color: #F97583;">*</span><span> n </span><span style="color: #F97583;">+</span><span> 1 }</span></span>
+<span class="giallo-l"><span>        steps </span><span style="color: #F97583;">+=</span><span> 1</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>#[test]</span></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span> language() {</span></span>
+<span class="giallo-l"><span>    assert</span><span style="color: #F97583;">!</span><span>(first_digit(&quot;fe 26</span><span style="color: #F97583;">.</span><span>6&quot;)</span><span style="color: #F97583;"> ==</span><span style="color: #B392F0;"> Option</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">Some</span><span>(2))</span></span>
+<span class="giallo-l"><span>    assert</span><span style="color: #F97583;">!</span><span>(first_digit(&quot;no digits&quot;)</span><span style="color: #F97583;"> ==</span><span style="color: #B392F0;"> Option</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">None</span><span>)</span></span>
+<span class="giallo-l"><span>    assert</span><span style="color: #F97583;">!</span><span>(collatz_steps(27)</span><span style="color: #F97583;"> ==</span><span> 111)</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>A few more:</p>
+<ul>
+<li>A trait effect now provides its supertraits, and theirs in turn: in a
+function that <code>uses (x: mut Super)</code>, a call that needs one of <code>Super</code>'s
+supertraits finds it.</li>
+<li><code>is_some</code>, <code>unwrap</code> and friends work on the optional accesses that
+projections return, so <code>v.last().unwrap() = x</code> writes the last element.</li>
+<li>An integer literal that does not fit its type, such as <code>let x: u8 = 300</code>,
+is now rejected. It used to be silently truncated.</li>
+<li><code>&amp;=</code> and <code>^=</code> now work on <code>bool</code>.</li>
+<li>Unchecked arithmetic now applies to <code>Wei</code>, <code>Duration</code> and <code>Timestamp</code>, and
+to any type that implements the wrapping operator traits.</li>
+</ul>
+<h2 id="experimental-webassembly-backend">Experimental WebAssembly backend</h2>
+<p>Fe can now compile to WebAssembly. With the <code>wasm</code> Cargo feature,
+<code>fe build --backend wasm</code> produces a module with a 32-bit <code>usize</code> and a
+manifest of its imports and exports, and <code>fe test --backend wasm</code> runs each
+test as its own module under Node.js. Every non-generic <code>pub fn</code> at the root
+of the file is exported, and <code>extern</code> functions become imports. <code>std::wasm</code>
+provides the host effects <code>Log</code>, <code>Clock</code>, <code>Abort</code> and a read-only <code>Files</code>,
+along with pure Fe mocks of each for testing.</p>
+<p>The WebAssembly backend is not part of the release binaries yet; build the
+compiler from source with <code>--features wasm,cranelift</code> to try it.</p>
+<h2 id="tooling">Tooling</h2>
+<ul>
+<li><code>fe build</code> now warns when a contract's runtime code or initcode exceeds the
+EIP-170 or EIP-3860 deployment limits, and <code>fe build --emit sizes</code> writes
+the code size of each function, largest first.</li>
+<li>Contracts with the same name in different modules of one ingot can now be
+built and tested. Their artifacts are named by module path.</li>
+<li>Errors in patterns are reported much more reliably. Patterns that name an
+unresolved variant, a non-integer constant, or a constant that shadows a
+<code>recv</code> arm field used to be accepted and match anything, and are now
+rejected.</li>
+<li><code>fe check</code> now reports type errors in <code>core</code> and <code>std</code> functions that the
+code being compiled reaches, instead of an internal error.</li>
+</ul>
+<h2 id="performance">Performance</h2>
+<ul>
+<li>On native targets, the 64-bit <code>usize</code> makes index-heavy code up to 45 times
+faster, <code>leading_zeros</code> compiles to a single instruction, and fewer values
+are copied when passed to view parameters.</li>
+<li><code>core::text::base64</code> encoding on the EVM costs about 65 gas per input byte
+instead of 284.</li>
+<li>A local array read at a computed index, such as <code>block[i]</code> in a loop, is
+stored in memory once instead of being copied for each read.</li>
+<li><code>MemBuffer</code> appends are faster, and <code>MemBuffer</code> and <code>MemVec</code> no longer
+over-allocate on large appends.</li>
+<li>Compiling programs with large cycles of mutually recursive functions, such
+as an interpreter whose opcode handlers call each other, is much faster:
+one such program now builds in 20 s and 4.7 GB instead of 55 s and 13.3 GB.</li>
+</ul>
+<!-- Editorial note: the interpreter above is fevm (named in the release
+notes). Name and link it here if it is public. -->
+<h2 id="other-fixes">Other fixes</h2>
+<ul>
+<li>At <code>-O1</code> and <code>-O2</code>, a checked operation whose result was unused could check
+the wrong operand, so <code>b - (a &amp; 255)</code> reverted with an overflow for
+<code>a = 2000</code> and <code>b = 1000</code>.</li>
+<li>A <code>mut</code> pattern binding of a packed storage field on a projection's result
+now writes to the field. The writes were silently lost.</li>
+<li>Calling through a mutable storage <code>Address</code>, such as <code>target.call(..)</code> on a
+<code>mut target: Address</code> field, is no longer rejected with an access conflict.</li>
+<li>A <code>let ... else</code> whose <code>else</code> block contains a nested scope keeps the
+pattern's bindings.</li>
+<li>Several internal errors in the access checker are fixed, among them <code>?</code> in
+generic methods that return <code>Option&lt;mut T&gt;</code>, <code>if let</code> with <code>|</code> patterns,
+and destructuring <code>recv</code> arm fields.</li>
+</ul>
+<h2 id="upgrading-from-26-5">Upgrading from 26.5</h2>
+<p>The most common changes existing code needs:</p>
+<ul>
+<li>Storage layouts changed: contract fields, packed value types in structs and
+map entries, and <code>StoragePackedArray</code> move to new slots and offsets. Data
+stored by a contract compiled with 26.5 must be migrated.</li>
+<li><code>DynString</code>, <code>Bytes</code> and <code>DynArray</code> are no longer <code>Copy</code>. Use <code>clone()</code> or
+pass them as view parameters. <code>payload_span</code> is renamed to <code>span</code>, and
+<code>DynString::as_bytes</code> is replaced by <code>into_bytes</code>.</li>
+<li><code>std::native::ByteBuffer</code> and <code>FixedStack</code> are removed in favor of
+<code>MemBuffer</code> and <code>MemVec</code>. <code>MemBuffer::alloc</code> is renamed <code>MemBuffer::new</code>.</li>
+<li><code>std::io</code>'s character I/O (<code>HostIo</code>, <code>read_char</code>, <code>write_char</code>, ...) is
+replaced by the <code>Stdout</code>, <code>Stderr</code> and <code>Stdin</code> effects. A native <code>main</code> no
+longer takes <code>argc</code> and <code>argv</code>; use <code>uses (args: Args)</code> instead.</li>
+<li><code>as</code> casts must be lossless on every target; use <code>downcast()</code> and friends
+for narrowing <code>usize</code> conversions.</li>
+<li>Calls to <code>extern</code> functions need an <code>unsafe</code> block.</li>
+<li>In <code>#[arithmetic(unchecked)]</code> code, operators on type parameters need the
+matching wrapping trait bound, such as <code>T: WrappingAdd</code>, and the wrapping
+traits take their operands <code>own</code>.</li>
+<li><code>v[i] = x</code> now destroys the element it overwrites, so fill uninitialized
+memory from <code>MemArray::new_uninit</code> through raw places.</li>
+<li>Only the root module's <code>pub fn main()</code> without parameters is a program
+entry.</li>
+</ul>
+<p>The <a rel="external" href="https://github.com/argotorg/fe/releases/tag/v26.6.0">release notes</a> list
+every removal.</p>
+<h2 id="try-it">Try it!</h2>
+<p><a rel="external" href="https://github.com/argotorg/fe/releases/tag/v26.6.0">Fe 26.6.0</a> is available
+now for Linux, macOS, and Windows. Let us know what you think!</p>
+<ul>
+<li><strong><a rel="external" href="https://fe-lang.org">fe-lang.org</a></strong></li>
+<li><strong><a rel="external" href="https://fe-lang.org/getting-started/first-contract/">Write your first contract</a></strong>: Get hands-on in minutes</li>
+<li><strong><a rel="external" href="https://fe-lang.zulipchat.com">Zulip</a></strong>: Join the conversation</li>
+</ul>
+
+        </section>
+
+        
+
+    </article>
+</main>
+
+
+    </div>
+</body>
+
+</html>

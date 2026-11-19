@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    
+    
+    <title>
+        Fe 26.7.0
+    </title>
+    
+
+    
+    
+
+    
+    
+        <link href=https://blog.fe-lang.org/fonts.css rel="stylesheet" />
+    
+        <!-- <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet"> -->
+
+    
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="ed2d919e-0e43-45d9-ac8a-7bed61075d36"></script>
+
+    
+    
+
+    
+    <link rel="alternate" type="application/atom+xml" title="" href="https://blog.fe-lang.org/atom.xml">
+
+    
+    
+    
+        <link rel="stylesheet" type="text/css" href="https://blog.fe-lang.org/theme/light.css"/>
+    
+
+    <link rel="stylesheet" type="text/css" media="screen" href=https://blog.fe-lang.org/main.css />
+
+
+    
+        
+            <link rel="stylesheet" href="https://blog.fe-lang.org/custom.css">
+        
+    
+</head>
+
+<body>
+    <div class="content">
+        <header>
+  <section class="nav">
+    <div>
+      <a href="https://fe-lang.org" class="no-border">
+        <img src="https:&#x2F;&#x2F;blog.fe-lang.org/fe-bare.svg" alt="Fe Programming Language">
+      </a>
+    </div>
+    <input id="menu-toggle" type="checkbox" />
+    <label class='menu-button-container' for="menu-toggle">
+      <div class='menu-button'></div>
+    </label>
+    <ul class="menu">
+      <li>
+        <a href="https://fe-lang.org/getting-started/what-is-fe/" class="a-non-active" title="Get started">Get started</a>
+      </li>
+      <li>
+        <a href="https://fe-lang.org/getting-started/key-concepts/" class="a-non-active" title="Learn">Learn</a>
+      </li>
+      <li>
+        <a href="https://fe-lang.zulipchat.com/join/dqvssgylulrmjmp2dx7vcbrq" class="a-non-active" title="Community">Community</a>
+      </li>
+      <li>
+        <a href="https:&#x2F;&#x2F;blog.fe-lang.org" class="a-active" title="Blog">Blog</a>
+      </li>
+    </ul>
+  </section>
+</header>
+
+        
+        
+    
+<main>
+    <article>
+        <div class="title">
+            
+            
+    <div class="page-header">
+        Fe 26.7.0<span class="primary-color" style="font-size: 1.6em">.</span>
+    </div>
+
+
+            
+                <div class="meta">
+                    Posted on 2026-11-18
+
+                    
+                </div>
+            
+        </div>
+
+        
+
+        
+        
+
+        <section class="body">
+            <!-- Editorial note: release-day copy, based on the v26.7.0 tag
+(e6e6342b252082f3fd8af5b9f763cb13296bf0a1, 2026-11-18), compared with v26.6.0.
+All Fe examples were checked with a `--profile dist --features
+fe/cranelift,fe/wasm` build of that commit; the native examples were built and
+run on x86-64 Linux, the WebAssembly example in Node.js 24. The "Performance"
+numbers are taken from the release notes, except the `base ** 2` gas figures,
+which come from PR #2028. Confirm the platform artifacts and
+remove draft status before publishing. -->
+<p>The Fe team is happy to announce the release of Fe 26.7.0!</p>
+<p>26.6 taught native Fe programs to print, read files and run other programs.
+26.7 lets them talk to the network: <code>std::net</code> brings TCP, UDP, a poller and
+DNS lookups, and files and sockets now read and write through common <code>Read</code>
+and <code>Write</code> traits, with a <code>BufReader</code> on top. The WebAssembly backend now ships in
+the release binaries and builds whole ingots, native programs run on
+AArch64 Linux, and calls can leave out generic arguments the compiler can
+infer. On the EVM, much of the standard library got cheaper, from text
+processing to base64, and a new <code>Call::forward_delegatecall</code> makes proxies
+simple.</p>
+<p>The effect system is stricter in this release, which can reject code that
+26.6 accepted; the <a href="https://blog.fe-lang.org/posts/release-26-7/#upgrading-from-26-6">upgrade notes</a> at the end summarize
+what existing code needs. Highlights are below; the full changelog is here:
+<a rel="external" href="https://github.com/argotorg/fe/releases/tag/v26.7.0">v26.7.0</a></p>
+<h2 id="networking">Networking</h2>
+<p><code>std::net</code> adds networking for native programs on Linux and macOS. Like the
+file system and processes in 26.6, the network is a capability: a function
+needs <code>Net</code> in its <code>uses</code> clause to open a socket. Here is a small TCP server
+that sends every line it receives back to the client:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> core</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">MemBuffer</span></span>
+<span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> std</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">io</span><span style="color: #F97583;">::</span><span>{</span><span style="color: #B392F0;">BufReader</span><span>,</span><span style="color: #B392F0;"> Error</span><span>,</span><span style="color: #B392F0;"> Stdout</span><span>,</span><span style="color: #B392F0;"> Write</span><span>}</span></span>
+<span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> std</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">net</span><span style="color: #F97583;">::</span><span>{</span><span style="color: #B392F0;">Net</span><span>,</span><span style="color: #B392F0;"> SocketAddr</span><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">pub fn</span><span> main()</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> i32</span><span> uses (out</span><span style="color: #F97583;">: mut</span><span style="color: #B392F0;"> Stdout</span><span>, net</span><span style="color: #F97583;">: mut</span><span style="color: #B392F0;"> Net</span><span>) {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    match</span><span> serve() {</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">        Result</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">Ok</span><span>(())</span><span style="color: #F97583;"> =&gt;</span><span> 0,</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">        Result</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">Err</span><span>(error)</span><span style="color: #F97583;"> =&gt;</span><span> {</span></span>
+<span class="giallo-l"><span>            println</span><span style="color: #F97583;">!</span><span>(&quot;echo</span><span style="color: #F97583;">:</span><span> &quot;, error)</span></span>
+<span class="giallo-l"><span>            1</span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span> serve()</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> Result</span><span>&lt;</span><span style="color: #B392F0;">Error</span><span>, ()&gt; uses (out</span><span style="color: #F97583;">: mut</span><span style="color: #B392F0;"> Stdout</span><span>, net</span><span style="color: #F97583;">: mut</span><span style="color: #B392F0;"> Net</span><span>) {</span></span>
+<span class="giallo-l"><span>    var listener </span><span style="color: #F97583;">=</span><span> net</span><span style="color: #F97583;">.</span><span>listen(</span><span style="color: #B392F0;">SocketAddr</span><span style="color: #F97583;">::</span><span>parse(&quot;127</span><span style="color: #F97583;">.</span><span>0</span><span style="color: #F97583;">.</span><span>0</span><span style="color: #F97583;">.</span><span>1</span><span style="color: #F97583;">:</span><span>7878&quot;)</span><span style="color: #F97583;">.</span><span>unwrap())</span><span style="color: #F97583;">?</span></span>
+<span class="giallo-l"><span>    println</span><span style="color: #F97583;">!</span><span>(&quot;listening on &quot;, listener</span><span style="color: #F97583;">.</span><span>local_addr()</span><span style="color: #F97583;">?</span><span>)</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    loop</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        let</span><span> (stream, peer)</span><span style="color: #F97583;"> =</span><span> listener</span><span style="color: #F97583;">.</span><span>accept()</span><span style="color: #F97583;">?</span></span>
+<span class="giallo-l"><span>        println</span><span style="color: #F97583;">!</span><span>(&quot;connection from &quot;, peer)</span></span>
+<span class="giallo-l"><span>        var conn </span><span style="color: #F97583;">=</span><span style="color: #B392F0;"> BufReader</span><span style="color: #F97583;">::</span><span>new(stream)</span></span>
+<span class="giallo-l"><span>        var line </span><span style="color: #F97583;">=</span><span style="color: #B392F0;"> MemBuffer</span><span style="color: #F97583;">::</span><span>empty()</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        while</span><span> conn</span><span style="color: #F97583;">.</span><span>read_line(</span><span style="color: #F97583;">mut</span><span> line)</span><span style="color: #F97583;">?</span><span> {</span></span>
+<span class="giallo-l"><span>            conn</span><span style="color: #F97583;">.</span><span>inner()</span><span style="color: #F97583;">.</span><span>write_all(format</span><span style="color: #F97583;">!</span><span>(&quot;echo</span><span style="color: #F97583;">:</span><span> &quot;, line, &quot;\n&quot;)</span><span style="color: #F97583;">.</span><span>span())</span><span style="color: #F97583;">?</span></span>
+<span class="giallo-l"><span>            line</span><span style="color: #F97583;">.</span><span>clear()</span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre><pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #B392F0;">fe</span><span style="color: #9ECBFF;"> build</span><span style="color: #79B8FF;"> --backend</span><span style="color: #9ECBFF;"> native</span><span style="color: #79B8FF;"> --out-dir</span><span style="color: #9ECBFF;"> out echo.fe</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">./out/echo</span><span> &amp;</span></span>
+<span class="giallo-l"><span style="color: #79B8FF;">printf</span><span style="color: #9ECBFF;"> &#39;hello\nfe\n&#39;</span><span style="color: #F97583;"> |</span><span style="color: #B392F0;"> nc</span><span style="color: #79B8FF;"> 127.0.0.1 7878</span><span style="color: #6A737D;">   # prints &quot;echo: hello&quot; and &quot;echo: fe&quot;</span></span></code></pre>
+<p>Only making a socket needs <code>Net</code>: once a function owns a <code>TcpStream</code>, it can
+read and write it without the capability. Beyond the example:</p>
+<ul>
+<li><code>Net::connect</code> and <code>connect_timeout</code> open a <code>TcpStream</code>, <code>listen</code> a
+<code>TcpListener</code>, and <code>bind_udp</code> a <code>UdpSocket</code>. Sockets have read and write
+timeouts, non-blocking modes and <code>shutdown</code>, and close when dropped.</li>
+<li><code>Net::lookup</code> resolves a host name to its addresses.</li>
+<li><code>Poller</code> waits for events on many sockets at once, with <code>epoll</code> on Linux and
+<code>kqueue</code> on macOS, for servers that handle many connections in one thread.</li>
+<li><code>Ipv4Addr</code>, <code>Ipv6Addr</code>, <code>IpAddr</code> and <code>SocketAddr</code> parse and print addresses
+on every target, the EVM included.</li>
+</ul>
+<h2 id="streams-and-files">Streams and files</h2>
+<p>The echo server reads its socket through <code>BufReader</code>. That works because
+<code>std::io</code> now has <code>Read</code> and <code>Write</code> traits, which sockets, files and the new
+<code>MemReader</code> implement. <code>BufReader</code> wraps any <code>Read</code> and reads a byte or a line
+at a time, and <code>read_line_max</code> limits how long a line may get, which a server
+reading from untrusted peers needs.</p>
+<p><code>std::fs</code> gains <code>File</code>: <code>Fs::open</code>, <code>create</code> and <code>open_with</code> open one, and it
+is closed when dropped. So a small <code>grep</code> now reads its file a line at a time
+instead of loading it whole:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> core</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">MemBuffer</span></span>
+<span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> std</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">env</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">Args</span></span>
+<span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> std</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">fs</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">Fs</span></span>
+<span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> std</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">io</span><span style="color: #F97583;">::</span><span>{</span><span style="color: #B392F0;">BufReader</span><span>,</span><span style="color: #B392F0;"> Error</span><span>,</span><span style="color: #B392F0;"> Stdout</span><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">pub fn</span><span> main()</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> i32</span><span> uses (out</span><span style="color: #F97583;">: mut</span><span style="color: #B392F0;"> Stdout</span><span>, args</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Args</span><span>, fs</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Fs</span><span>) {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    match</span><span> grep() {</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">        Result</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">Ok</span><span>(matches)</span><span style="color: #F97583;"> =&gt; if</span><span> matches</span><span style="color: #F97583;"> &gt;</span><span> 0 { 0 }</span><span style="color: #F97583;"> else</span><span> { 1 },</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">        Result</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">Err</span><span>(error)</span><span style="color: #F97583;"> =&gt;</span><span> {</span></span>
+<span class="giallo-l"><span>            println</span><span style="color: #F97583;">!</span><span>(&quot;grep</span><span style="color: #F97583;">:</span><span> &quot;, error)</span></span>
+<span class="giallo-l"><span>            2</span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span> grep()</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> Result</span><span>&lt;</span><span style="color: #B392F0;">Error</span><span>,</span><span style="color: #B392F0;"> usize</span><span>&gt; uses (out</span><span style="color: #F97583;">: mut</span><span style="color: #B392F0;"> Stdout</span><span>, args</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Args</span><span>, fs</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Fs</span><span>) {</span></span>
+<span class="giallo-l"><span>    var reader </span><span style="color: #F97583;">=</span><span style="color: #B392F0;"> BufReader</span><span style="color: #F97583;">::</span><span>new(fs</span><span style="color: #F97583;">.</span><span>open(args</span><span style="color: #F97583;">.</span><span>get(2))</span><span style="color: #F97583;">?</span><span>)</span></span>
+<span class="giallo-l"><span>    var line </span><span style="color: #F97583;">=</span><span style="color: #B392F0;"> MemBuffer</span><span style="color: #F97583;">::</span><span>empty()</span></span>
+<span class="giallo-l"><span>    var number</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> usize</span><span style="color: #F97583;"> =</span><span> 0</span></span>
+<span class="giallo-l"><span>    var matches</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> usize</span><span style="color: #F97583;"> =</span><span> 0</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    while</span><span> reader</span><span style="color: #F97583;">.</span><span>read_line(</span><span style="color: #F97583;">mut</span><span> line)</span><span style="color: #F97583;">?</span><span> {</span></span>
+<span class="giallo-l"><span>        number </span><span style="color: #F97583;">+=</span><span> 1</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        if</span><span> line</span><span style="color: #F97583;">.</span><span>span()</span><span style="color: #F97583;">.</span><span>index_of(args</span><span style="color: #F97583;">.</span><span>get(1))</span><span style="color: #F97583;">.</span><span>is_some() {</span></span>
+<span class="giallo-l"><span>            println</span><span style="color: #F97583;">!</span><span>(number, &quot;</span><span style="color: #F97583;">:</span><span> &quot;, line)</span></span>
+<span class="giallo-l"><span>            matches </span><span style="color: #F97583;">+=</span><span> 1</span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span>        line</span><span style="color: #F97583;">.</span><span>clear()</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    Result</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">Ok</span><span>(matches)</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p><code>OpenOptions</code> covers the other cases, such as appending or creating a file
+only if it doesn't exist. <code>io::Error</code> has new kinds for sockets, such as
+<code>WouldBlock</code>, <code>TimedOut</code> and <code>ConnectionRefused</code>, and <code>Error::new(kind)</code> makes
+an error without a host error number.</p>
+<h2 id="webassembly">WebAssembly</h2>
+<p>The WebAssembly backend introduced in 26.6 is now part of the release
+binaries, so <code>fe build --backend wasm</code> and <code>fe test --backend wasm</code> work
+without building the compiler from source. It has also grown a lot:</p>
+<ul>
+<li><code>fe build --backend wasm</code> builds ingots and workspaces, not just single
+files. As in native libraries, a module exports the functions marked
+<code>#[unsafe(export)]</code>, wherever they are in the ingot, and they may call the
+rest of the ingot and its dependencies.</li>
+<li><code>std::wasm::Host</code> provides <code>Stdout</code>, <code>Stderr</code> and <code>Stdin</code>, so code that
+prints with <code>println!</code> builds for WebAssembly as well as for native
+targets.</li>
+<li>A panic passes Solidity-style revert data, such as <code>Panic(0x11)</code> for an
+overflow, to the host instead of trapping, and <code>fe test --backend wasm</code>
+shows a failed test's output and revert data, as the other backends do.</li>
+<li>Modules are at least a third smaller, 128- and 256-bit division is 20 to 40
+times faster, dense <code>match</code>es compile to jump tables, and self-recursive
+tail calls no longer grow the stack.</li>
+</ul>
+<p>The <code>fe_gcd</code> function from the 26.6 announcement builds into a WebAssembly
+module unchanged:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span>#[</span><span style="color: #F97583;">unsafe</span><span>(export)]</span></span>
+<span class="giallo-l"><span style="color: #F97583;">pub fn</span><span style="color: #B392F0;"> fe_gcd</span><span>(_ a</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> u64</span><span>, _ b</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> u64</span><span>)</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> u64</span><span> {</span></span>
+<span class="giallo-l"><span>    var x</span><span style="color: #F97583;"> =</span><span> a</span></span>
+<span class="giallo-l"><span>    var y</span><span style="color: #F97583;"> =</span><span> b</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    while</span><span> y</span><span style="color: #F97583;"> !=</span><span style="color: #79B8FF;"> 0</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        let</span><span> t</span><span style="color: #F97583;"> =</span><span> y</span></span>
+<span class="giallo-l"><span>        y</span><span style="color: #F97583;"> =</span><span> x</span><span style="color: #F97583;"> %</span><span> y</span></span>
+<span class="giallo-l"><span>        x</span><span style="color: #F97583;"> =</span><span> t</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>    x</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre><pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="shellscript"><span class="giallo-l"><span style="color: #B392F0;">fe</span><span style="color: #9ECBFF;"> build</span><span style="color: #79B8FF;"> --backend</span><span style="color: #9ECBFF;"> wasm</span><span style="color: #79B8FF;"> --out-dir</span><span style="color: #9ECBFF;"> out gcd.fe</span><span style="color: #6A737D;">   # writes gcd.wasm and gcd.manifest.json</span></span></code></pre><pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="javascript"><span class="giallo-l"><span style="color: #F97583;">import</span><span> { readFile }</span><span style="color: #F97583;"> from</span><span style="color: #9ECBFF;"> &quot;node:fs/promises&quot;</span><span>;</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #6A737D;">// `x % y` can panic, so the module imports the revert hook of the host contract.</span></span>
+<span class="giallo-l"><span style="color: #F97583;">const</span><span style="color: #79B8FF;"> env</span><span style="color: #F97583;"> =</span><span> {</span><span style="color: #B392F0;"> __fe_revert</span><span>: ()</span><span style="color: #F97583;"> =&gt;</span><span> {</span><span style="color: #F97583;"> throw new</span><span style="color: #B392F0;"> Error</span><span>(</span><span style="color: #9ECBFF;">&quot;fe_gcd reverted&quot;</span><span>); } };</span></span>
+<span class="giallo-l"><span style="color: #F97583;">const</span><span> {</span><span style="color: #79B8FF;"> instance</span><span> }</span><span style="color: #F97583;"> = await</span><span> WebAssembly.</span><span style="color: #B392F0;">instantiate</span><span>(</span><span style="color: #F97583;">await</span><span style="color: #B392F0;"> readFile</span><span>(</span><span style="color: #9ECBFF;">&quot;out/gcd.wasm&quot;</span><span>), { env });</span></span>
+<span class="giallo-l"><span>console.</span><span style="color: #B392F0;">log</span><span>(instance.exports.</span><span style="color: #B392F0;">fe_gcd</span><span>(</span><span style="color: #79B8FF;">1071</span><span style="color: #F97583;">n</span><span>,</span><span style="color: #79B8FF;"> 462</span><span style="color: #F97583;">n</span><span>));</span><span style="color: #6A737D;"> // 21n</span></span></code></pre>
+<p>The manifest lists the module's imports and exports. A module that uses host
+effects, such as <code>Stdout</code> or files, imports them too;
+<a rel="external" href="https://github.com/argotorg/fe/blob/master/examples/wasm/host.mjs"><code>examples/wasm/host.mjs</code></a>
+is a host for Node.js that provides them.</p>
+<h2 id="aarch64-linux">AArch64 Linux</h2>
+<p>Native executables and <code>fe test --backend native</code> now work on AArch64 Linux,
+as well as on x86-64 Linux and AArch64 macOS. <code>#[cfg(target_arch = "x86_64")]</code> and <code>#[cfg(target_arch = "aarch64")]</code> select items by the
+architecture that native code runs on, as <code>target_os</code> does by the operating
+system.</p>
+<h2 id="language-improvements">Language improvements</h2>
+<h3 id="partial-generic-arguments">Partial generic arguments</h3>
+<p>A call can now give only some of its callee's generic arguments. They fill the
+parameters from the left, and the rest are inferred or take their defaults.
+<code>_</code> stands for an argument to infer, so later arguments can be given while
+earlier ones are inferred:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">fn</span><span style="color: #B392F0;"> repeat</span><span>&lt;</span><span style="color: #F97583;">const</span><span style="color: #B392F0;"> N</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> usize</span><span>,</span><span style="color: #B392F0;"> T</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Copy</span><span>&gt;(_ value</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> T</span><span>)</span><span style="color: #F97583;"> -&gt;</span><span> [</span><span style="color: #B392F0;">T</span><span>;</span><span style="color: #B392F0;"> N</span><span>] {</span></span>
+<span class="giallo-l"><span>    [value;</span><span style="color: #B392F0;"> N</span><span>]</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span style="color: #B392F0;"> pick</span><span>&lt;</span><span style="color: #B392F0;">T</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Copy</span><span>,</span><span style="color: #F97583;"> const</span><span style="color: #B392F0;"> I</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> usize</span><span>&gt;(_ items</span><span style="color: #F97583;">:</span><span> [</span><span style="color: #B392F0;">T</span><span>;</span><span style="color: #79B8FF;"> 4</span><span>])</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> T</span><span> {</span></span>
+<span class="giallo-l"><span>    items[</span><span style="color: #B392F0;">I</span><span>]</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>#[test]</span></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span style="color: #B392F0;"> partial_generic_arguments</span><span>() {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    let</span><span> seven</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> u8</span><span style="color: #F97583;"> =</span><span style="color: #79B8FF;"> 7</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    let</span><span> bytes</span><span style="color: #F97583;"> =</span><span> repeat&lt;</span><span style="color: #79B8FF;">4</span><span>&gt;(seven)</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    assert!</span><span>(bytes[</span><span style="color: #79B8FF;">3</span><span>]</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 7</span><span>)</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">    let</span><span> words</span><span style="color: #F97583;">:</span><span> [u256;</span><span style="color: #79B8FF;"> 4</span><span>]</span><span style="color: #F97583;"> =</span><span> [</span><span style="color: #79B8FF;">10</span><span>,</span><span style="color: #79B8FF;"> 20</span><span>,</span><span style="color: #79B8FF;"> 30</span><span>,</span><span style="color: #79B8FF;"> 40</span><span>]</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    assert!</span><span>(pick&lt;_,</span><span style="color: #79B8FF;"> 2</span><span>&gt;(words)</span><span style="color: #F97583;"> ==</span><span style="color: #79B8FF;"> 30</span><span>)</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>A call that leaves a generic parameter uninferred now names it, and suggests
+the arguments that would give it, as in "consider giving it explicitly:
+<code>op&lt;1, F&gt;</code>".</p>
+<h3 id="cold-functions"><code>#[cold]</code> functions</h3>
+<p><code>#[cold]</code> marks a function as rarely called, such as one that reports a
+fault. The optimizer doesn't inline it into callers that aren't cold, and
+native code moves the paths that call it out of the way of the rest of their
+function:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">enum</span><span style="color: #B392F0;"> Status</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    Charged</span><span> { left</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> u64</span><span> },</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    OutOfGas</span><span> { pc</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> usize</span><span> },</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>#[cold]</span></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span style="color: #B392F0;"> out_of_gas</span><span>(pc</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> usize</span><span>)</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> Status</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    Status</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">OutOfGas</span><span> { pc }</span></span>
+<span class="giallo-l"><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">fn</span><span style="color: #B392F0;"> charge</span><span>(gas</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> u64</span><span>, cost</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> u64</span><span>, pc</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> usize</span><span>)</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> Status</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    if</span><span> cost</span><span style="color: #F97583;"> &gt;</span><span> gas {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">        return</span><span style="color: #B392F0;"> out_of_gas</span><span>(pc)</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span style="color: #B392F0;">    Status</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">Charged</span><span> { left</span><span style="color: #F97583;">:</span><span> gas</span><span style="color: #F97583;"> -</span><span> cost }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>See the
+<a rel="external" href="https://github.com/argotorg/fe/blob/master/docs/language/inline-and-cold.md">inline and cold guide</a>
+for how it combines with <code>#[inline]</code>.</p>
+<h3 id="variadic-extern-functions">Variadic <code>extern</code> functions</h3>
+<p>A trailing <code>...</code> makes an <code>extern</code> function variadic, so native programs can
+call C functions such as <code>fcntl</code>:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">extern</span><span> {</span></span>
+<span class="giallo-l"><span style="color: #F97583;">    fn</span><span style="color: #B392F0;"> fcntl</span><span>(_ fd</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> i32</span><span>, _ cmd</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> i32</span><span>,</span><span style="color: #F97583;"> ...</span><span>)</span><span style="color: #F97583;"> -&gt;</span><span style="color: #B392F0;"> i32</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>The extra arguments must be 32- or 64-bit integers or raw pointers, and
+variadic functions are native-only.</p>
+<h3 id="stricter-effects">Stricter effects</h3>
+<p>A call's effects now follow the rule its arguments do: two effects of one call
+may not overlap where one of them is <code>mut</code>. In return, a function can rely on
+its effects being disjoint, so it may iterate one effect while it writes
+another. A provider is also no longer chosen by matching its name to the
+callee's effect label: when a scope has two providers of one key,
+<code>with (Key = value)</code> picks one. The
+<a rel="external" href="https://github.com/argotorg/fe/blob/master/docs/language/effects.md">effects guide</a>
+has the full rules. Along the way, several bugs where writes through <code>mut</code>
+effects to packed storage fields were lost are fixed.</p>
+<h2 id="proxies-with-forward-delegatecall">Proxies with <code>forward_delegatecall</code></h2>
+<p><code>Call::forward_delegatecall(addr, gas)</code> forwards the current calldata to
+<code>addr</code> with <code>DELEGATECALL</code>, and returns or reverts with the callee's
+returndata unchanged. That is the whole fallback of a delegating proxy:</p>
+<pre class="giallo" style="color: #E1E4E8; background-color: #24292E;"><code data-lang="rust"><span class="giallo-l"><span style="color: #F97583;">use</span><span style="color: #B392F0;"> std</span><span style="color: #F97583;">::</span><span style="color: #B392F0;">evm</span><span style="color: #F97583;">::</span><span>{</span><span style="color: #B392F0;">Address</span><span>,</span><span style="color: #B392F0;"> Call</span><span>,</span><span style="color: #B392F0;"> Ctx</span><span>}</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span style="color: #F97583;">pub</span><span> contract </span><span style="color: #B392F0;">Proxy</span><span> uses (ctx</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Ctx</span><span>, call</span><span style="color: #F97583;">: mut</span><span style="color: #B392F0;"> Call</span><span>) {</span></span>
+<span class="giallo-l"><span>    implementation</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Address</span><span>,</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    init(target</span><span style="color: #F97583;">:</span><span style="color: #B392F0;"> Address</span><span>) uses (</span><span style="color: #F97583;">mut</span><span> implementation) {</span></span>
+<span class="giallo-l"><span>        implementation </span><span style="color: #F97583;">=</span><span> target</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"></span>
+<span class="giallo-l"><span>    recv {</span></span>
+<span class="giallo-l"><span>        #[payable]</span></span>
+<span class="giallo-l"><span>        _ uses (ctx, implementation,</span><span style="color: #F97583;"> mut</span><span> call) {</span></span>
+<span class="giallo-l"><span>            call</span><span style="color: #F97583;">.</span><span>forward_delegatecall(addr</span><span style="color: #F97583;">:</span><span> implementation, gas</span><span style="color: #F97583;">:</span><span> ctx</span><span style="color: #F97583;">.</span><span>gas())</span></span>
+<span class="giallo-l"><span>        }</span></span>
+<span class="giallo-l"><span>    }</span></span>
+<span class="giallo-l"><span>}</span></span></code></pre>
+<p>It spends about 100 to 170 gas a call less than a proxy that copies through
+<code>MemBuffer</code>, <code>raw_delegatecall</code> and <code>copy_returndata</code>.</p>
+<h2 id="performance">Performance</h2>
+<ul>
+<li>Much of the standard library uses less gas on the EVM. Text searching,
+splitting, comparing and ordering work a word at a time instead of a byte at
+a time, base64 decoding of long inputs uses about 90% less gas, and base58,
+hex and decimal formatting, number parsing, RLP, <code>isqrt</code>, <code>mul_div</code> and
+fixed-point rescaling are all cheaper.</li>
+<li>Typed calls whose returned data has a static ABI size decode it straight
+from the call output, and copying <code>Bytes</code> and <code>DynString</code> payloads clears
+only the final padding word.</li>
+<li><code>x ** 2</code> and other checked powers with a small constant exponent compile to
+at most two checked multiplications: <code>base ** 2</code> costs 508 gas instead of
+692.</li>
+<li>Contracts with immutable fields no longer carry constant data their code
+never reads, which shrinks contracts in the Liquity and Uniswap v4 ports by
+up to 1,236 bytes, and constants that hold a single value are passed like
+computed values instead of being read from the contract code.</li>
+<li><code>fe test</code> on the EVM compiles the selected tests into one contract and
+deploys it once: 20 tests calling a 300-function library went from 24 s to
+1.1 s of CPU time.</li>
+<li>Native <code>MemVec</code> and <code>MemBuffer</code> grow with <code>realloc</code>, which extends or remaps
+an allocation instead of copying it.</li>
+</ul>
+<h2 id="other-fixes">Other fixes</h2>
+<ul>
+<li>Optimized native and WebAssembly code no longer moves a division ahead of
+the test that guards it, so <code>if d != 0 { s += x / d }</code> in a loop can't trap
+with <code>d == 0</code> anymore.</li>
+<li>Writes to packed storage fields through <code>mut</code> arguments, <code>mut</code> effects and
+projections are no longer lost, including when a callee ends the call
+successfully while the access is open.</li>
+<li>Invalid trait arguments in qualified paths and errors in a trait's
+associated type defaults are reported where they are written.</li>
+<li>The language server applies edits in the order they arrive, shows signature
+help for many more kinds of calls, and no longer panics on several unusual
+workspace layouts.</li>
+</ul>
+<h2 id="upgrading-from-26-6">Upgrading from 26.6</h2>
+<p>The most common changes existing code needs:</p>
+<ul>
+<li>Two effects of one call may no longer overlap where one is <code>mut</code>, such as
+<code>with (totals.log, mut totals) { settle() }</code>.</li>
+<li>Providers are no longer matched to effects by name. A <code>with</code> block or
+scope with two providers of one key needs <code>with (Key = value)</code> to choose,
+and a <code>uses</code> list may name each key only once.</li>
+<li>The <code>EffectRef</code> marker trait is removed. Every type implemented it, so
+bounds that name it can be dropped.</li>
+<li>A WebAssembly module now exports only the functions marked
+<code>#[unsafe(export)]</code>, not every <code>pub fn</code> at the root of the file. Hosts need
+to implement version 3 of the host contract, which adds <code>__fe_revert</code>,
+<code>abort</code> and <code>sys_wasm_files_read</code>, and make a new instance of a module
+after a failed call.</li>
+<li><code>io::Error::code()</code> now returns an <code>Option&lt;i32&gt;</code>.</li>
+<li>A native program that replaces <code>malloc</code> and <code>free</code> must now replace
+<code>realloc</code> too.</li>
+</ul>
+<p>The <a rel="external" href="https://github.com/argotorg/fe/releases/tag/v26.7.0">release notes</a> list
+every change.</p>
+<h2 id="try-it">Try it!</h2>
+<p><a rel="external" href="https://github.com/argotorg/fe/releases/tag/v26.7.0">Fe 26.7.0</a> is available
+now for Linux, macOS, and Windows. Let us know what you think!</p>
+<p>The <a rel="external" href="https://fe-lang.org/contest/">Fe Builders Challenge</a> is still running
+until November 24. Any Fe from 26.5.1 on counts, so you can switch to 26.7 or
+stay where you are.</p>
+<ul>
+<li><strong><a rel="external" href="https://fe-lang.org">fe-lang.org</a></strong></li>
+<li><strong><a rel="external" href="https://fe-lang.org/getting-started/first-contract/">Write your first contract</a></strong>: Get hands-on in minutes</li>
+<li><strong><a rel="external" href="https://fe-lang.zulipchat.com">Zulip</a></strong>: Join the conversation</li>
+</ul>
+
+        </section>
+
+        
+
+    </article>
+</main>
+
+
+    </div>
+</body>
+
+</html>
